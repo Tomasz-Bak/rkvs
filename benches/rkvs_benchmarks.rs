@@ -1,402 +1,372 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
-use rkvs::{StorageManager, StorageManagerBuilder, StorageConfig, NamespaceConfig};
-use tempfile::TempDir;
-use tokio::runtime::Runtime;
+use criterion::{criterion_group, criterion_main, Criterion, BenchmarkId};
+use std::time::Duration;
+mod benchmark_helpers;
+use benchmark_helpers::BenchmarkHelpers;
 
-fn create_test_storage() -> StorageManager {
-    StorageManagerBuilder::new()
-        .with_config(StorageConfig {
-            max_namespaces: Some(1000),
-            default_max_keys_per_namespace: Some(10000),
-            default_max_value_size: Some(1024 * 1024), // 1MB
-        })
-        .build()
-}
-
-fn create_test_storage_with_persistence() -> (StorageManager, TempDir) {
-    let temp_dir = TempDir::new().unwrap();
-    let storage_path = temp_dir.path().join("benchmark_storage.bin");
+/// Comprehensive RKVS benchmark suite with realistic performance measurements
+fn benchmark_single_operations(c: &mut Criterion) {
+    let rt = tokio::runtime::Runtime::new().unwrap();
     
-    let storage = StorageManagerBuilder::new()
-        .with_config(StorageConfig {
-            max_namespaces: Some(1000),
-            default_max_keys_per_namespace: Some(10000),
-            default_max_value_size: Some(1024 * 1024),
-        })
-        .with_persistence(storage_path)
-        .build();
+    let (_storage, namespace) = rt.block_on(async {
+        let storage = BenchmarkHelpers::create_test_storage();
+        storage.initialize().await.unwrap();
+        
+        let ns_hash = storage.create_namespace("single_ops", None).await.unwrap();
+        let namespace = storage.namespace(ns_hash).await.unwrap();
+        
+        // Setup test data
+        let data = vec![0u8; 1024];
+        namespace.set("test_key".to_string(), data.clone()).await.unwrap();
+        
+        (storage, namespace)
+    });
     
-    (storage, temp_dir)
-}
-
-fn bench_namespace_operations(c: &mut Criterion) {
-    let rt = Runtime::new().unwrap();
+    let mut group = c.benchmark_group("single_operations");
+    group.measurement_time(Duration::from_secs(10));
+    group.warm_up_time(Duration::from_secs(2));
     
-    c.bench_function("namespace_create", |b| {
+    // Get operation benchmark
+    group.bench_function("get_operation", |b| {
         b.iter(|| {
             rt.block_on(async {
-                let storage = create_test_storage();
-                storage.initialize().await.unwrap();
-                storage.create_namespace("benchmark_ns", None).await.unwrap()
+                let result = namespace.get("test_key").await;
+                // Force computation to prevent optimization
+                let _ = result.map(|v| v.len());
             })
         })
     });
-
-    c.bench_function("namespace_get", |b| {
-        b.iter(|| {
-            rt.block_on(async {
-                let storage = create_test_storage();
-                storage.initialize().await.unwrap();
-                let ns_hash = storage.create_namespace("benchmark_ns", None).await.unwrap();
-                let namespace = storage.namespace(ns_hash).await.unwrap();
-                namespace
-            })
-        })
-    });
-
-    c.bench_function("namespace_delete", |b| {
-        b.iter(|| {
-            rt.block_on(async {
-                let storage = create_test_storage();
-                storage.initialize().await.unwrap();
-                let ns_hash = storage.create_namespace("benchmark_ns", None).await.unwrap();
-                storage.delete_namespace(ns_hash).await.unwrap()
-            })
-        })
-    });
-}
-
-fn bench_key_value_operations(c: &mut Criterion) {
-    let rt = Runtime::new().unwrap();
     
-    c.bench_function("set_small_value", |b| {
+    // Set operation benchmark
+    group.bench_function("set_operation", |b| {
         b.iter(|| {
             rt.block_on(async {
-                let storage = create_test_storage();
-                storage.initialize().await.unwrap();
-                let ns_hash = storage.create_namespace("benchmark_ns", None).await.unwrap();
-                let namespace = storage.namespace(ns_hash).await.unwrap();
-                
-                namespace.set("key1".to_string(), b"small_value".to_vec()).await.unwrap()
+                let mut data = vec![0u8; 1024];
+                for i in 0..data.len() {
+                    data[i] = (i % 256) as u8;
+                }
+                let _ = namespace.set("test_key".to_string(), data).await;
             })
         })
     });
-
-    c.bench_function("set_medium_value", |b| {
-        b.iter(|| {
-            rt.block_on(async {
-                let storage = create_test_storage();
-                storage.initialize().await.unwrap();
-                let ns_hash = storage.create_namespace("benchmark_ns", None).await.unwrap();
-                let namespace = storage.namespace(ns_hash).await.unwrap();
-                
-                let medium_value = vec![0u8; 1024]; // 1KB
-                namespace.set("key1".to_string(), medium_value).await.unwrap()
-            })
-        })
-    });
-
-    c.bench_function("set_large_value", |b| {
-        b.iter(|| {
-            rt.block_on(async {
-                let storage = create_test_storage();
-                storage.initialize().await.unwrap();
-                let ns_hash = storage.create_namespace("benchmark_ns", None).await.unwrap();
-                let namespace = storage.namespace(ns_hash).await.unwrap();
-                
-                let large_value = vec![0u8; 64 * 1024]; // 64KB
-                namespace.set("key1".to_string(), large_value).await.unwrap()
-            })
-        })
-    });
-
-    c.bench_function("get_existing_key", |b| {
-        b.iter(|| {
-            rt.block_on(async {
-                let storage = create_test_storage();
-                storage.initialize().await.unwrap();
-                let ns_hash = storage.create_namespace("benchmark_ns", None).await.unwrap();
-                let namespace = storage.namespace(ns_hash).await.unwrap();
-                
-                namespace.set("key1".to_string(), b"test_value".to_vec()).await.unwrap();
-                
-                namespace.get("key1").await
-            })
-        })
-    });
-
-    c.bench_function("get_nonexistent_key", |b| {
-        b.iter(|| {
-            rt.block_on(async {
-                let storage = create_test_storage();
-                storage.initialize().await.unwrap();
-                let ns_hash = storage.create_namespace("benchmark_ns", None).await.unwrap();
-                let namespace = storage.namespace(ns_hash).await.unwrap();
-                
-                namespace.get("nonexistent_key").await
-            })
-        })
-    });
-
-    c.bench_function("delete_existing_key", |b| {
-        b.iter(|| {
-            rt.block_on(async {
-                let storage = create_test_storage();
-                storage.initialize().await.unwrap();
-                let ns_hash = storage.create_namespace("benchmark_ns", None).await.unwrap();
-                let namespace = storage.namespace(ns_hash).await.unwrap();
-                
-                namespace.set("key1".to_string(), b"test_value".to_vec()).await.unwrap();
-                
-                namespace.delete("key1").await
-            })
-        })
-    });
-
-    c.bench_function("exists_check", |b| {
-        b.iter(|| {
-            rt.block_on(async {
-                let storage = create_test_storage();
-                storage.initialize().await.unwrap();
-                let ns_hash = storage.create_namespace("benchmark_ns", None).await.unwrap();
-                let namespace = storage.namespace(ns_hash).await.unwrap();
-                
-                namespace.set("key1".to_string(), b"test_value".to_vec()).await.unwrap();
-                
-                namespace.exists("key1").await
-            })
-        })
-    });
-
-    c.bench_function("consume_existing_key", |b| {
-        b.iter(|| {
-            rt.block_on(async {
-                let storage = create_test_storage();
-                storage.initialize().await.unwrap();
-                let ns_hash = storage.create_namespace("benchmark_ns", None).await.unwrap();
-                let namespace = storage.namespace(ns_hash).await.unwrap();
-                
-                namespace.set("key1".to_string(), b"test_value".to_vec()).await.unwrap();
-                
-                namespace.consume("key1").await
-            })
-        })
-    });
-
-    c.bench_function("consume_nonexistent_key", |b| {
-        b.iter(|| {
-            rt.block_on(async {
-                let storage = create_test_storage();
-                storage.initialize().await.unwrap();
-                let ns_hash = storage.create_namespace("benchmark_ns", None).await.unwrap();
-                let namespace = storage.namespace(ns_hash).await.unwrap();
-                
-                namespace.consume("nonexistent_key").await
-            })
-        })
-    });
-}
-
-fn bench_bulk_operations(c: &mut Criterion) {
-    let rt = Runtime::new().unwrap();
     
-    let sizes = [10, 100, 1000, 10000];
+    // Delete operation benchmark
+    group.bench_function("delete_operation", |b| {
+        b.iter(|| {
+            rt.block_on(async {
+                let _ = namespace.delete("test_key").await;
+            })
+        })
+    });
     
-    for &size in &sizes {
-        c.bench_with_input(BenchmarkId::new("bulk_set", size), &size, |b, &size| {
+        // Exists operation benchmark
+        group.bench_function("exists_operation", |b| {
             b.iter(|| {
                 rt.block_on(async {
-                    let storage = create_test_storage();
-                    storage.initialize().await.unwrap();
-                    let ns_hash = storage.create_namespace("benchmark_ns", None).await.unwrap();
-                    let namespace = storage.namespace(ns_hash).await.unwrap();
-                    
+                    let _ = namespace.exists("test_key").await;
+                })
+            })
+        });
+        
+        // Consume operation benchmark
+        group.bench_function("consume_operation", |b| {
+            b.iter(|| {
+                rt.block_on(async {
+                    let _ = namespace.consume("test_key").await;
+                })
+            })
+        });
+        
+        group.finish();
+}
+
+fn benchmark_bulk_operations(c: &mut Criterion) {
+    let rt = tokio::runtime::Runtime::new().unwrap();
+    
+    let (_storage, namespace) = rt.block_on(async {
+        let storage = BenchmarkHelpers::create_test_storage();
+        storage.initialize().await.unwrap();
+        
+        let ns_hash = storage.create_namespace("bulk_ops", None).await.unwrap();
+        let namespace = storage.namespace(ns_hash).await.unwrap();
+        
+        // Setup test data
+        BenchmarkHelpers::setup_test_data(&namespace, "bulk_key", 100, 1024).await.unwrap();
+        
+        (storage, namespace)
+    });
+    
+    let mut group = c.benchmark_group("bulk_operations");
+    group.measurement_time(Duration::from_secs(10));
+    group.warm_up_time(Duration::from_secs(2));
+    
+    // Bulk get operations
+    for size in [10, 50, 100].iter() {
+        group.bench_with_input(BenchmarkId::new("bulk_get", size), size, |b, &size| {
+            b.iter(|| {
+                rt.block_on(async {
                     for i in 0..size {
-                        let key = format!("key_{}", i);
-                        let value = format!("value_{}", i).into_bytes();
-                        namespace.set(key, value).await.unwrap();
+                        let key = format!("bulk_key_{}", i);
+                        let result = namespace.get(&key).await;
+                        let _ = result.map(|v| v.len());
                     }
                 })
             })
         });
     }
-
-    for &size in &sizes {
-        c.bench_with_input(BenchmarkId::new("bulk_get", size), &size, |b, &size| {
+    
+    // Bulk set operations
+    for size in [10, 50, 100].iter() {
+        group.bench_with_input(BenchmarkId::new("bulk_set", size), size, |b, &size| {
             b.iter(|| {
                 rt.block_on(async {
-                    let storage = create_test_storage();
-                    storage.initialize().await.unwrap();
-                    let ns_hash = storage.create_namespace("benchmark_ns", None).await.unwrap();
-                    let namespace = storage.namespace(ns_hash).await.unwrap();
-                    
                     for i in 0..size {
-                        let key = format!("key_{}", i);
-                        let value = format!("value_{}", i).into_bytes();
-                        namespace.set(key, value).await.unwrap();
-                    }
-                    
-                    for i in 0..size {
-                        let key = format!("key_{}", i);
-                        black_box(namespace.get(&key).await);
+                        let key = format!("bulk_set_key_{}", i);
+                        let mut data = vec![0u8; 1024];
+                        for j in 0..data.len() {
+                            data[j] = ((i * j) % 256) as u8;
+                        }
+                        let _ = namespace.set(key, data).await;
                     }
                 })
             })
         });
     }
+    
+    group.finish();
+    
+    // Cleanup
+    rt.block_on(async {
+        BenchmarkHelpers::cleanup_test_data(&namespace, "bulk_key", 100).await.unwrap();
+    });
 }
 
-fn bench_concurrent_operations(c: &mut Criterion) {
-    let rt = Runtime::new().unwrap();
+fn benchmark_concurrent_operations(c: &mut Criterion) {
+    let rt = tokio::runtime::Runtime::new().unwrap();
     
-    c.bench_function("concurrent_reads", |b| {
+    let (_storage, namespace) = rt.block_on(async {
+        let storage = BenchmarkHelpers::create_test_storage();
+        storage.initialize().await.unwrap();
+        
+        let ns_hash = storage.create_namespace("concurrent_ops", None).await.unwrap();
+        let namespace = storage.namespace(ns_hash).await.unwrap();
+        
+        // Setup test data
+        BenchmarkHelpers::setup_test_data(&namespace, "concurrent_key", 50, 1024).await.unwrap();
+        
+        (storage, namespace)
+    });
+    
+    let mut group = c.benchmark_group("concurrent_operations");
+    group.measurement_time(Duration::from_secs(10));
+    group.warm_up_time(Duration::from_secs(2));
+    
+    // Concurrent read operations
+    for concurrency in [2, 5, 10, 20].iter() {
+        group.bench_with_input(BenchmarkId::new("concurrent_reads", concurrency), concurrency, |b, &concurrency| {
+            b.iter(|| {
+                rt.block_on(async {
+                    let mut handles = Vec::new();
+                    
+                    for _ in 0..concurrency {
+                        let namespace = namespace.clone();
+                        let handle = tokio::spawn(async move {
+                            for i in 0..5 {
+                                let key = format!("concurrent_key_{}", i);
+                                let result = namespace.get(&key).await;
+                                let _ = result.map(|v| v.len());
+                            }
+                        });
+                        handles.push(handle);
+                    }
+                    
+                    for handle in handles {
+                        let _ = handle.await;
+                    }
+                })
+            })
+        });
+    }
+    
+    // Concurrent write operations
+    for concurrency in [2, 5, 10].iter() {
+        group.bench_with_input(BenchmarkId::new("concurrent_writes", concurrency), concurrency, |b, &concurrency| {
+            b.iter(|| {
+                rt.block_on(async {
+                    let mut handles = Vec::new();
+                    
+                    for thread_id in 0..concurrency {
+                        let namespace = namespace.clone();
+                        let handle = tokio::spawn(async move {
+                            for i in 0..5 {
+                                let key = format!("concurrent_write_{}_{}", thread_id, i);
+                                let mut data = vec![0u8; 1024];
+                                for j in 0..data.len() {
+                                    data[j] = ((thread_id * i * j) % 256) as u8;
+                                }
+                                let _ = namespace.set(key, data).await;
+                            }
+                        });
+                        handles.push(handle);
+                    }
+                    
+                    for handle in handles {
+                        let _ = handle.await;
+                    }
+                })
+            })
+        });
+    }
+    
+    group.finish();
+    
+    // Cleanup
+    rt.block_on(async {
+        BenchmarkHelpers::cleanup_test_data(&namespace, "concurrent_key", 50).await.unwrap();
+    });
+}
+
+fn benchmark_data_sizes(c: &mut Criterion) {
+    let rt = tokio::runtime::Runtime::new().unwrap();
+    
+    let (_storage, namespace) = rt.block_on(async {
+        let storage = BenchmarkHelpers::create_test_storage();
+        storage.initialize().await.unwrap();
+        
+        let ns_hash = storage.create_namespace("data_sizes", None).await.unwrap();
+        let namespace = storage.namespace(ns_hash).await.unwrap();
+        
+        (storage, namespace)
+    });
+    
+    let mut group = c.benchmark_group("data_sizes");
+    group.measurement_time(Duration::from_secs(10));
+    group.warm_up_time(Duration::from_secs(2));
+    
+    // Test different data sizes
+    for size in [64, 256, 1024, 4096, 16384].iter() {
+        // Setup data for this size
+        rt.block_on(async {
+            let mut data = vec![0u8; *size];
+            for i in 0..data.len() {
+                data[i] = (i % 256) as u8;
+            }
+            namespace.set("size_test_key".to_string(), data.clone()).await.unwrap();
+        });
+        
+        group.bench_with_input(BenchmarkId::new("get_operation", size), size, |b, &_size| {
+            b.iter(|| {
+                rt.block_on(async {
+                    let result = namespace.get("size_test_key").await;
+                    let _ = result.map(|v| v.len());
+                })
+            })
+        });
+        
+        group.bench_with_input(BenchmarkId::new("set_operation", size), size, |b, &size| {
+            b.iter(|| {
+                rt.block_on(async {
+                    let mut data = vec![0u8; size];
+                    for i in 0..data.len() {
+                        data[i] = (i % 256) as u8;
+                    }
+                    let _ = namespace.set("size_test_key".to_string(), data).await;
+                })
+            })
+        });
+    }
+    
+    group.finish();
+}
+
+fn benchmark_realistic_workloads(c: &mut Criterion) {
+    let rt = tokio::runtime::Runtime::new().unwrap();
+    
+    let (_storage, namespace) = rt.block_on(async {
+        let storage = BenchmarkHelpers::create_test_storage();
+        storage.initialize().await.unwrap();
+        
+        let ns_hash = storage.create_namespace("realistic_workloads", None).await.unwrap();
+        let namespace = storage.namespace(ns_hash).await.unwrap();
+        
+        // Setup realistic test data
+        for i in 0..100 {
+            let key = format!("workload_key_{}", i);
+            let mut data = vec![0u8; 1024];
+            for j in 0..data.len() {
+                data[j] = ((i * j) % 256) as u8;
+            }
+            namespace.set(key, data).await.unwrap();
+        }
+        
+        (storage, namespace)
+    });
+    
+    let mut group = c.benchmark_group("realistic_workloads");
+    group.measurement_time(Duration::from_secs(15));
+    group.warm_up_time(Duration::from_secs(3));
+    
+    // Mixed read/write workload
+    group.bench_function("mixed_read_write", |b| {
         b.iter(|| {
             rt.block_on(async {
-                let storage = create_test_storage();
-                storage.initialize().await.unwrap();
-                let ns_hash = storage.create_namespace("benchmark_ns", None).await.unwrap();
-                let namespace = storage.namespace(ns_hash).await.unwrap();
-                
-                for i in 0..100 {
-                    let key = format!("key_{}", i);
-                    let value = format!("value_{}", i).into_bytes();
-                    namespace.set(key, value).await.unwrap();
-                }
-                
-                // Concurrent reads
-                let handles: Vec<_> = (0..10).map(|_| {
-                    let namespace = namespace.clone();
-                    tokio::spawn(async move {
-                        for i in 0..100 {
-                            let key = format!("key_{}", i);
-                            black_box(namespace.get(&key).await);
+                for i in 0..20 {
+                    let key = format!("workload_key_{}", i);
+                    if i % 3 == 0 {
+                        // Write operation
+                        let mut data = vec![0u8; 1024];
+                        for j in 0..data.len() {
+                            data[j] = ((i * j + 1000) % 256) as u8;
                         }
-                    })
-                }).collect();
-                
-                for handle in handles {
-                    handle.await.unwrap();
+                        let _ = namespace.set(key, data).await;
+                    } else {
+                        // Read operation
+                        let result = namespace.get(&key).await;
+                        let _ = result.map(|v| v.len());
+                    }
                 }
             })
         })
     });
-
-    c.bench_function("concurrent_writes", |b| {
-        b.iter(|| {
-            rt.block_on(async {
-                let storage = create_test_storage();
-                storage.initialize().await.unwrap();
-                let ns_hash = storage.create_namespace("benchmark_ns", None).await.unwrap();
-                let namespace = storage.namespace(ns_hash).await.unwrap();
-                
-                // Concurrent writes
-                let handles: Vec<_> = (0..10).map(|thread_id| {
-                    let namespace = namespace.clone();
-                    tokio::spawn(async move {
-                        for i in 0..100 {
-                            let key = format!("key_{}_{}", thread_id, i);
-                            let value = format!("value_{}_{}", thread_id, i).into_bytes();
-                            namespace.set(key, value).await.unwrap();
-                        }
-                    })
-                }).collect();
-                
-                for handle in handles {
-                    handle.await.unwrap();
-                }
-            })
-        })
-    });
-}
-
-fn bench_persistence_operations(c: &mut Criterion) {
-    let rt = Runtime::new().unwrap();
     
-    c.bench_function("save_to_disk", |b| {
+    // Read-heavy workload
+    group.bench_function("read_heavy", |b| {
         b.iter(|| {
             rt.block_on(async {
-                let (storage, _temp_dir) = create_test_storage_with_persistence();
-                storage.initialize().await.unwrap();
-                
-                // Add some data
-                let ns_hash = storage.create_namespace("benchmark_ns", None).await.unwrap();
-                let namespace = storage.namespace(ns_hash).await.unwrap();
-                
-                for i in 0..1000 {
-                    let key = format!("key_{}", i);
-                    let value = format!("value_{}", i).into_bytes();
-                    namespace.set(key, value).await.unwrap();
+                for i in 0..50 {
+                    let key = format!("workload_key_{}", i);
+                    let result = namespace.get(&key).await;
+                    let _ = result.map(|v| v.len());
                 }
-                
-                storage.save().await.unwrap()
             })
         })
     });
-
-    c.bench_function("load_from_disk", |b| {
-        b.iter(|| {
-            rt.block_on(async {
-                let (storage, _temp_dir) = create_test_storage_with_persistence();
-                storage.initialize().await.unwrap();
-                
-                let ns_hash = storage.create_namespace("benchmark_ns", None).await.unwrap();
-                let namespace = storage.namespace(ns_hash).await.unwrap();
-                
-                for i in 0..1000 {
-                    let key = format!("key_{}", i);
-                    let value = format!("value_{}", i).into_bytes();
-                    namespace.set(key, value).await.unwrap();
-                }
-                storage.save().await.unwrap();
-                
-                let (new_storage, _temp_dir) = create_test_storage_with_persistence();
-                new_storage.initialize().await.unwrap()
-            })
-        })
-    });
-}
-
-fn bench_config_operations(c: &mut Criterion) {
-    let rt = Runtime::new().unwrap();
     
-    c.bench_function("update_namespace_config", |b| {
+    // Write-heavy workload
+    group.bench_function("write_heavy", |b| {
         b.iter(|| {
             rt.block_on(async {
-                let storage = create_test_storage();
-                storage.initialize().await.unwrap();
-                let ns_hash = storage.create_namespace("benchmark_ns", None).await.unwrap();
-                
-                let new_config = NamespaceConfig {
-                    max_keys: Some(5000),
-                    max_value_size: Some(512 * 1024),
-                };
-                
-                storage.update_namespace_config(ns_hash, new_config).await.unwrap()
+                for i in 0..20 {
+                    let key = format!("write_heavy_key_{}", i);
+                    let mut data = vec![0u8; 1024];
+                    for j in 0..data.len() {
+                        data[j] = ((i * j + 2000) % 256) as u8;
+                    }
+                    let _ = namespace.set(key, data).await;
+                }
             })
         })
     });
-
-    c.bench_function("get_namespace_config", |b| {
-        b.iter(|| {
-            rt.block_on(async {
-                let storage = create_test_storage();
-                storage.initialize().await.unwrap();
-                let ns_hash = storage.create_namespace("benchmark_ns", None).await.unwrap();
-                let namespace = storage.namespace(ns_hash).await.unwrap();
-                
-                namespace.get_config().await
-            })
-        })
-    });
+    
+    group.finish();
 }
 
 criterion_group!(
     benches,
-    bench_namespace_operations,
-    bench_key_value_operations,
-    bench_bulk_operations,
-    bench_concurrent_operations,
-    bench_persistence_operations,
-    bench_config_operations
+    benchmark_single_operations,
+    benchmark_bulk_operations,
+    benchmark_concurrent_operations,
+    benchmark_data_sizes,
+    benchmark_realistic_workloads
 );
+
 criterion_main!(benches);
