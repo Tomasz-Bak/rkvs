@@ -191,7 +191,6 @@ fn bench_key_value_operations(c: &mut Criterion) {
                 let ns_hash = storage.create_namespace("benchmark_ns", None).await.unwrap();
                 let namespace = storage.namespace(ns_hash).await.unwrap();
                 
- of non-existent key
                 namespace.consume("nonexistent_key").await
             })
         })
@@ -237,7 +236,6 @@ fn bench_bulk_operations(c: &mut Criterion) {
                         namespace.set(key, value).await.unwrap();
                     }
                     
-s
                     for i in 0..size {
                         let key = format!("key_{}", i);
                         black_box(namespace.get(&key).await);
@@ -341,7 +339,6 @@ fn bench_persistence_operations(c: &mut Criterion) {
                 let (storage, _temp_dir) = create_test_storage_with_persistence();
                 storage.initialize().await.unwrap();
                 
- and save
                 let ns_hash = storage.create_namespace("benchmark_ns", None).await.unwrap();
                 let namespace = storage.namespace(ns_hash).await.unwrap();
                 
