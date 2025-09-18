@@ -52,7 +52,7 @@ impl Namespace {
     /// # Example
     /// 
     /// ```rust
-    /// use rkvs::{Namespace, NamespaceConfig};
+    /// use rkvs::{namespace::Namespace, NamespaceConfig};
     /// 
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -93,7 +93,7 @@ impl Namespace {
     /// # Example
     /// 
     /// ```rust
-    /// use rkvs::{Namespace, NamespaceConfig};
+    /// use rkvs::{namespace::Namespace, NamespaceConfig};
     /// 
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -190,7 +190,7 @@ impl Namespace {
     /// # Example
     /// 
     /// ```rust
-    /// use rkvs::{Namespace, NamespaceConfig};
+    /// use rkvs::{namespace::Namespace, NamespaceConfig};
     /// 
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -310,7 +310,7 @@ impl Namespace {
     /// # Example
     /// 
     /// ```rust
-    /// use rkvs::{Namespace, NamespaceConfig, BatchResult};
+    /// use rkvs::{namespace::Namespace, NamespaceConfig, BatchResult};
     /// 
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {

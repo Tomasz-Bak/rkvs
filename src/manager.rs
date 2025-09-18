@@ -144,6 +144,11 @@ impl StorageManagerBuilder {
 }
 
 impl StorageManager {
+    /// Create a new builder for configuring a StorageManager
+    pub fn builder() -> StorageManagerBuilder {
+        StorageManagerBuilder::new()
+    }
+    
     fn new(config: StorageConfig, persistence: Option<FilePersistence>) -> Self {
         Self {
             namespaces: Arc::new(Mutex::new(HashMap::new())),
@@ -272,14 +277,14 @@ impl StorageManager {
     ///     storage.initialize().await?;
     ///     
     ///     // Create namespace with default config
-    ///     let ns_hash = storage.create_namespace("my_app", None).await?;
+    ///     let ns_hash1 = storage.create_namespace("my_app", None).await?;
     ///     
     ///     // Create namespace with custom config
     ///     let config = NamespaceConfig {
     ///         max_keys: Some(1000),
     ///         max_value_size: Some(1024 * 1024),
     ///     };
-    ///     let ns_hash = storage.create_namespace("my_app", Some(config)).await?;
+    ///     let ns_hash2 = storage.create_namespace("my_app2", Some(config)).await?;
     ///     
     ///     Ok(())
     /// }

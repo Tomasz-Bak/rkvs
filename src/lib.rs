@@ -56,7 +56,7 @@
 //! RKVS supports efficient batch operations for processing multiple key-value pairs:
 //!
 //! ```rust
-//! use rkvs::{Namespace, BatchResult};
+//! use rkvs::{namespace::Namespace, BatchResult, Result};
 //!
 //! async fn batch_example(namespace: &Namespace) -> Result<()> {
 //!     // Batch set multiple items

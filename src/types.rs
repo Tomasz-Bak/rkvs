@@ -49,6 +49,15 @@ pub struct NamespaceConfig {
     pub max_value_size: Option<usize>,
 }
 
+impl Default for NamespaceConfig {
+    fn default() -> Self {
+        Self {
+            max_keys: None,
+            max_value_size: None,
+        }
+    }
+}
+
 /// Hash utilities for key and namespace hashing
 pub struct HashUtils;
 
