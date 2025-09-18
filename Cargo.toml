@@ -5,9 +5,9 @@ edition = "2021"
 description = "A high-performance, namespace-based key-value storage system with async operations and batch processing"
 authors = ["RKVS Contributors"]
 license = "MIT"
-repository = "https://github.com/yourusername/rkvs"
+repository = "https://github.com/Tomasz-Bak/rkvs"
 readme = "README.md"
-keywords = ["key-value", "storage", "database", "async", "namespace", "persistence", "kv-store"]
+keywords = ["key-value", "storage", "database", "async", "kv-store"]
 categories = ["database", "data-structures", "asynchronous"]
 
 [lib]
