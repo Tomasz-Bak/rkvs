@@ -327,9 +327,11 @@ impl Namespace {
     ///     if result.is_success() {
     ///         println!("Successfully set {} items", result.total_processed);
     ///     } else {
-    ///         println!("Failed with {} errors", result.errors.len());
-    ///         for error in &result.errors {
-    ///             println!("Error for key '{}': {}", error.key, error.error_message);
+    ///         if let Some(errors) = &result.errors {
+    ///             println!("Failed with {} errors", errors.len());
+    ///             for error in errors {
+    ///                 println!("Error for key '{}': {}", error.key, error.error_message);
+    ///             }
     ///         }
     ///     }
     ///     
@@ -345,11 +347,33 @@ impl Namespace {
         let mut key_mappings = self.key_mappings.write().await;
         let mut metadata = self.metadata.write().await;
         let config = self.config.read().await;
-        let mut items_to_insert = Vec::new();
+        
+        if let Some(max_keys) = config.max_keys {
+            if metadata.key_count + total_items > max_keys {
+                return BatchResult {
+                    data: None,
+                    total_processed: total_items,
+                    duration: start.elapsed(),
+                    errors: Some(vec![BatchError {
+                        key: "batch".to_string(),
+                        operation: "set".to_string(),
+                        error_message: format!(
+                            "Key count limit {} would be exceeded by inserting {} items", 
+                            max_keys, total_items
+                        ),
+                        index: 0,
+                    }]),
+                };
+            }
+        }
+        
+        let mut items_to_insert = Vec::with_capacity(total_items);
         let mut total_size_increase = 0;
         let mut new_keys_count = 0;
         
         for (index, (key, value)) in items.into_iter().enumerate() {
+            let key_hash = HashUtils::hash(&key);
+            
             if let Some(max_value_size) = config.max_value_size {
                 if value.len() > max_value_size {
                     errors.push(BatchError {
@@ -364,27 +388,7 @@ impl Namespace {
                     continue;
                 }
             }
-            if let Some(max_keys) = config.max_keys {
-                let key_hash = HashUtils::hash(&key);
-                let is_new_key = !data.contains_key(&key_hash);
-                if is_new_key && metadata.key_count + new_keys_count >= max_keys {
-                    errors.push(BatchError {
-                        key: key.clone(),
-                        operation: "set".to_string(),
-                        error_message: format!(
-                            "Key count limit {} would be exceeded", max_keys
-                        ),
-                        index,
-                    });
-                    continue;
-                }
-            }
             
-            if !errors.is_empty() {
-                continue;
-            }
-            
-            let key_hash = HashUtils::hash(&key);
             if !data.contains_key(&key_hash) {
                 new_keys_count += 1;
                 total_size_increase += value.len();
@@ -392,7 +396,7 @@ impl Namespace {
                 let existing_size = data.get(&key_hash).map(|v| v.len()).unwrap_or(0);
                 total_size_increase += value.len() - existing_size;
             }
-            
+
             items_to_insert.push((key_hash, key, value));
         }
         
@@ -401,7 +405,7 @@ impl Namespace {
                 data: None,
                 total_processed: total_items,
                 duration: start.elapsed(),
-                errors,
+                errors: Some(errors),
             };
         }
         
@@ -417,7 +421,7 @@ impl Namespace {
             data: Some(()),
             total_processed: total_items,
             duration: start.elapsed(),
-            errors: Vec::new(),
+            errors: None,
         }
     }
 
@@ -453,7 +457,7 @@ impl Namespace {
                 data: None,
                 total_processed: total_keys,
                 duration: start.elapsed(),
-                errors,
+                errors: Some(errors),
             };
         }
         
@@ -461,7 +465,7 @@ impl Namespace {
             data: Some(items_to_get),
             total_processed: total_keys,
             duration: start.elapsed(),
-            errors: Vec::new(),
+            errors: None,
         }
     }
 
@@ -502,7 +506,7 @@ impl Namespace {
                 data: None,
                 total_processed: total_keys,
                 duration: start.elapsed(),
-                errors,
+                errors: Some(errors),
             };
         }
         
@@ -517,7 +521,7 @@ impl Namespace {
             data: Some(()),
             total_processed: total_keys,
             duration: start.elapsed(),
-            errors: Vec::new(),
+            errors: None,
         }
     }
 
@@ -558,7 +562,7 @@ impl Namespace {
                 data: None,
                 total_processed: total_keys,
                 duration: start.elapsed(),
-                errors,
+                errors: Some(errors),
             };
         }
         
@@ -575,7 +579,7 @@ impl Namespace {
             data: Some(results),
             total_processed: total_keys,
             duration: start.elapsed(),
-            errors: Vec::new(),
+            errors: None,
         }
     }
 }
@@ -960,7 +964,7 @@ mod tests {
     #[tokio::test]
     async fn test_set_multiple_validation_error() {
         let config = NamespaceConfig {
-            max_keys: Some(2),
+            max_keys: Some(10), // Allow enough keys
             max_value_size: Some(5),
         };
         let namespace = Namespace::new("test".to_string(), config);
@@ -968,7 +972,7 @@ mod tests {
         let items = vec![
             ("key1".to_string(), b"val1".to_vec()), // OK (4 bytes)
             ("key2".to_string(), b"toolongvalue".to_vec()), // Too long (12 bytes)
-            ("key3".to_string(), b"val3".to_vec()), // Would exceed key limit (4 bytes)
+            ("key3".to_string(), b"val3".to_vec()), // OK (4 bytes)
         ];
         
         let result = namespace.set_multiple(items).await;
@@ -976,10 +980,10 @@ mod tests {
         assert!(!result.is_success());
         assert!(result.has_errors());
         assert_eq!(result.total_processed, 3);
-        assert_eq!(result.errors.len(), 1); // key2 fails on size
-        assert_eq!(result.errors[0].key, "key2");
-        assert_eq!(result.errors[0].operation, "set");
-        assert!(result.errors[0].error_message.contains("exceeds maximum"));
+        assert_eq!(result.errors.as_ref().unwrap().len(), 1); // key2 fails on size
+        assert_eq!(result.errors.as_ref().unwrap()[0].key, "key2");
+        assert_eq!(result.errors.as_ref().unwrap()[0].operation, "set");
+        assert!(result.errors.as_ref().unwrap()[0].error_message.contains("exceeds maximum"));
         
         assert_eq!(namespace.get("key1").await, None);
         assert_eq!(namespace.get("key2").await, None);
@@ -1029,11 +1033,11 @@ mod tests {
         assert!(!result.is_success());
         assert!(result.has_errors());
         assert_eq!(result.total_processed, 3);
-        assert_eq!(result.errors.len(), 2); // Both missing keys cause errors
-        assert_eq!(result.errors[0].key, "missing");
-        assert_eq!(result.errors[0].operation, "get");
-        assert_eq!(result.errors[1].key, "key2");
-        assert_eq!(result.errors[1].operation, "get");
+        assert_eq!(result.errors.as_ref().unwrap().len(), 2); // Both missing keys cause errors
+        assert_eq!(result.errors.as_ref().unwrap()[0].key, "missing");
+        assert_eq!(result.errors.as_ref().unwrap()[0].operation, "get");
+        assert_eq!(result.errors.as_ref().unwrap()[1].key, "key2");
+        assert_eq!(result.errors.as_ref().unwrap()[1].operation, "get");
     }
 
     #[tokio::test]
@@ -1080,9 +1084,9 @@ mod tests {
         assert!(!result.is_success());
         assert!(result.has_errors());
         assert_eq!(result.total_processed, 2);
-        assert_eq!(result.errors.len(), 1);
-        assert_eq!(result.errors[0].key, "missing");
-        assert_eq!(result.errors[0].operation, "delete");
+        assert_eq!(result.errors.as_ref().unwrap().len(), 1);
+        assert_eq!(result.errors.as_ref().unwrap()[0].key, "missing");
+        assert_eq!(result.errors.as_ref().unwrap()[0].operation, "delete");
         
         assert_eq!(namespace.get("key1").await, Some(b"value1".to_vec()));
     }
@@ -1138,9 +1142,9 @@ mod tests {
         assert!(!result.is_success());
         assert!(result.has_errors());
         assert_eq!(result.total_processed, 2);
-        assert_eq!(result.errors.len(), 1);
-        assert_eq!(result.errors[0].key, "missing");
-        assert_eq!(result.errors[0].operation, "consume");
+        assert_eq!(result.errors.as_ref().unwrap().len(), 1);
+        assert_eq!(result.errors.as_ref().unwrap()[0].key, "missing");
+        assert_eq!(result.errors.as_ref().unwrap()[0].operation, "consume");
         
         assert_eq!(namespace.get("key1").await, Some(b"value1".to_vec()));
     }

@@ -70,6 +70,45 @@ impl HashUtils {
     }
 }
 
+/// Result of a batch operation
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BatchResult<T> {
+    pub data: Option<T>,
+    pub total_processed: usize,
+    pub duration: Duration,
+    pub errors: Option<Vec<BatchError>>,
+}
+
+/// Error information for a failed item in a batch operation
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BatchError {
+    pub key: String,
+    pub operation: String,
+    pub error_message: String,
+    pub index: usize,
+}
+
+impl<T> BatchResult<T> {
+    /// Check if the batch operation was successful
+    pub fn is_success(&self) -> bool {
+        self.errors.is_none() && self.data.is_some()
+    }
+    
+    /// Check if the batch operation had any errors
+    pub fn has_errors(&self) -> bool {
+        self.errors.is_some()
+    }
+    
+    /// Get the success rate as a percentage
+    pub fn success_rate(&self) -> f64 {
+        if self.total_processed == 0 {
+            0.0
+        } else {
+            (self.total_processed - self.errors.as_ref().map_or(0, |v| v.len())) as f64 / self.total_processed as f64
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -212,45 +251,6 @@ mod tests {
     }
 }
 
-/// Result of a batch operation
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct BatchResult<T> {
-    pub data: Option<T>,
-    pub total_processed: usize,
-    pub duration: Duration,
-    pub errors: Vec<BatchError>,
-}
-
-/// Error information for a failed item in a batch operation
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct BatchError {
-    pub key: String,
-    pub operation: String,
-    pub error_message: String,
-    pub index: usize,
-}
-
-impl<T> BatchResult<T> {
-    /// Check if the batch operation was successful
-    pub fn is_success(&self) -> bool {
-        self.errors.is_empty() && self.data.is_some()
-    }
-    
-    /// Check if the batch operation had any errors
-    pub fn has_errors(&self) -> bool {
-        !self.errors.is_empty()
-    }
-    
-    /// Get the success rate as a percentage
-    pub fn success_rate(&self) -> f64 {
-        if self.total_processed == 0 {
-            0.0
-        } else {
-            (self.total_processed - self.errors.len()) as f64 / self.total_processed as f64
-        }
-    }
-}
-
 #[cfg(test)]
 mod batch_tests {
     use super::*;
@@ -262,7 +262,7 @@ mod batch_tests {
             data: Some(vec![1, 2, 3]),
             total_processed: 3,
             duration: Duration::from_millis(1),
-            errors: Vec::new(),
+            errors: None,
         };
         
         assert!(result.is_success());
@@ -276,7 +276,7 @@ mod batch_tests {
             data: None,
             total_processed: 5,
             duration: Duration::from_millis(2),
-            errors: vec![
+            errors: Some(vec![
                 BatchError {
                     key: "key1".to_string(),
                     operation: "set".to_string(),
@@ -289,7 +289,7 @@ mod batch_tests {
                     error_message: "Key not found".to_string(),
                     index: 2,
                 },
-            ],
+            ]),
         };
         
         assert!(!result.is_success());
