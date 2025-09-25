@@ -23,7 +23,7 @@ Add RKVS to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-rkvs = "0.1.0"
+rkvs = "0.2.0"
 tokio = { version = "1.0", features = ["full"] }
 ```
 
@@ -47,10 +47,10 @@ async fn main() -> Result<()> {
         max_keys: Some(1000),
         max_value_size: Some(1024 * 1024), // 1MB
     };
-    let ns_hash = storage.create_namespace("my_app", Some(config)).await?;
+    storage.create_namespace("my_app", Some(config)).await?;
     
     // Get the namespace handle
-    let namespace = storage.namespace(ns_hash).await?;
+    let namespace = storage.namespace("my_app").await?;
     
     // Store data
     namespace.set("user:123".to_string(), b"John Doe".to_vec()).await?;
@@ -136,9 +136,12 @@ let storage = StorageManager::builder()
 
 RKVS is designed for high performance with the following characteristics:
 
-- **Namespace Operations**: ~370ns (create), ~427ns (get), ~457ns (delete)
-- **Key-Value Operations**: ~790ns (small values), ~1.84μs (large values)
-- **Batch Operations**: Linear scaling with 3-8% improvement over individual operations
+- **Get**: ~134ns
+- **Set**: ~482ns
+- **Delete** - ~160ns
+- **Exists** - ~122ns
+- **consume** - ~160ns 
+- **Batch Operations**: Tests show 30% more efficient Get and negligible Set
 - **Concurrent Access**: Optimized for read-heavy workloads with RwLock-based synchronization
 
 See the [benchmark results](benches/) for detailed performance metrics.
@@ -156,11 +159,12 @@ See the [benchmark results](benches/) for detailed performance metrics.
 ### Key Methods
 
 #### StorageManager
-- `create_namespace(name, config)` - Create a new namespace
-- `namespace(hash)` - Get a namespace handle
-- `delete_namespace(hash)` - Remove a namespace
-- `list_namespaces()` - List all namespaces
-- `save()` / `load()` - Persistence operations
+- `create_namespace(name, config)` - Create a new namespace, returns namespace name
+- `namespace(name)` - Get a namespace handle using namespace name
+- `delete_namespace(name)` - Remove a namespace using namespace name
+- `list_namespaces()` - List all namespace names
+- `save()` - Save all data to disk (if persistence enabled)
+- `initialize()` - Initialize storage and load from disk (if persistence enabled)
 
 #### Namespace
 - `set(key, value)` - Store a key-value pair
@@ -216,11 +220,35 @@ let storage = StorageManager::builder()
 // Save all data to disk
 storage.save().await?;
 
-// Load data from disk
-storage.load().await?;
+// Initialize storage (loads data from disk if persistence is enabled)
+storage.initialize().await?;
 ```
 
 Data is automatically serialized using `bincode` for efficient storage.
+
+## Migration Guide
+
+### Upgrading from v0.1.0 to v0.2.0
+
+The main breaking change is the switch from hash-based namespace identifiers to string-based namespace IDs:
+
+**Before (v0.1.0):**
+```rust
+let ns_hash = storage.create_namespace("my_app", Some(config)).await?;
+let namespace = storage.namespace(ns_hash).await?;  // ns_hash was [u8; 32]
+```
+
+**After (v0.2.0):**
+```rust
+storage.create_namespace("my_app", Some(config)).await?;
+storage.namespace("my_app").await?;  // namespace_id is String
+```
+
+**Key Changes:**
+- `create_namespace()` now returns Ok(()) or Err() instead of `[u8; 32]`
+- `namespace()` method now takes `&str` instead of `[u8; 32]`
+- All other methods (`delete_namespace`, `get_namespace_stats`, etc.) now use `&str` for namespace identification
+- No more manual hash conversion needed 
 
 ## License
 
@@ -231,6 +259,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Changelog
+
+### v0.2.0 (Latest)
+- **Breaking Change**: Updated API to use string-based namespace IDs instead of hash values
+- **Performance**: Switched from `Mutex` to `RwLock` for better concurrent read performance, removed pointless hashing and data duplication
+- **API Improvements**: Simplified namespace ID handling - no more manual hash conversion needed
+- **Documentation**: Updated all examples and documentation to reflect new API
+- **Concurrency**: Improved read performance with multiple concurrent readers support
 
 ### v0.1.0
 - Initial release

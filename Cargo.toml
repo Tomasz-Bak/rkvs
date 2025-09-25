@@ -1,6 +1,6 @@
 [package]
 name = "rkvs"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "A high-performance, namespace-based key-value storage system with async operations and batch processing"
 authors = ["RKVS Contributors"]
@@ -22,6 +22,7 @@ sha2 = "0.10"
 thiserror = "1.0"
 tempfile = "3.0"
 clap = { version = "4.0", features = ["derive"] }
+hex = "0.4"
 
 [dev-dependencies]
 tokio-test = "0.4"
@@ -30,8 +31,3 @@ criterion = { version = "0.5", features = ["html_reports"] }
 [[bench]]
 name = "rkvs_benchmarks"
 harness = false
-
-[[bin]]
-name = "realistic_benchmark"
-path = "benches/realistic_benchmark.rs"
-

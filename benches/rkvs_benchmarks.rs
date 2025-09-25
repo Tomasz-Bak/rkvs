@@ -11,12 +11,13 @@ fn benchmark_single_operations(c: &mut Criterion) {
         let storage = BenchmarkHelpers::create_test_storage();
         storage.initialize().await.unwrap();
         
-        let ns_hash = storage.create_namespace("single_ops", None).await.unwrap();
-        let namespace = storage.namespace(ns_hash).await.unwrap();
+        storage.create_namespace("single_ops", None).await.unwrap();
+        let namespace = storage.namespace("single_ops").await.unwrap();
         
         // Setup test data
         let data = vec![0u8; 1024];
         namespace.set("test_key".to_string(), data.clone()).await.unwrap();
+        namespace.set("test_key_2".to_string(), data.clone()).await.unwrap();
         
         (storage, namespace)
     });
@@ -58,25 +59,25 @@ fn benchmark_single_operations(c: &mut Criterion) {
         })
     });
     
-        // Exists operation benchmark
-        group.bench_function("exists_operation", |b| {
-            b.iter(|| {
-                rt.block_on(async {
-                    let _ = namespace.exists("test_key").await;
-                })
+    // Exists operation benchmark
+    group.bench_function("exists_operation", |b| {
+        b.iter(|| {
+            rt.block_on(async {
+                let _ = namespace.exists("test_key_2").await;
             })
-        });
-        
-        // Consume operation benchmark
-        group.bench_function("consume_operation", |b| {
-            b.iter(|| {
-                rt.block_on(async {
-                    let _ = namespace.consume("test_key").await;
-                })
+        })
+    });
+    
+    // Consume operation benchmark
+    group.bench_function("consume_operation", |b| {
+        b.iter(|| {
+            rt.block_on(async {
+                let _ = namespace.consume("test_key_2").await;
             })
-        });
-        
-        group.finish();
+        })
+    });
+    
+    group.finish();
 }
 
 fn benchmark_bulk_operations(c: &mut Criterion) {
@@ -86,8 +87,8 @@ fn benchmark_bulk_operations(c: &mut Criterion) {
         let storage = BenchmarkHelpers::create_test_storage();
         storage.initialize().await.unwrap();
         
-        let ns_hash = storage.create_namespace("bulk_ops", None).await.unwrap();
-        let namespace = storage.namespace(ns_hash).await.unwrap();
+        storage.create_namespace("bulk_ops", None).await.unwrap();
+        let namespace = storage.namespace("bulk_ops").await.unwrap();
         
         // Setup test data
         BenchmarkHelpers::setup_test_data(&namespace, "bulk_key", 100, 1024).await.unwrap();
@@ -147,8 +148,8 @@ fn benchmark_concurrent_operations(c: &mut Criterion) {
         let storage = BenchmarkHelpers::create_test_storage();
         storage.initialize().await.unwrap();
         
-        let ns_hash = storage.create_namespace("concurrent_ops", None).await.unwrap();
-        let namespace = storage.namespace(ns_hash).await.unwrap();
+        storage.create_namespace("concurrent_ops", None).await.unwrap();
+        let namespace = storage.namespace("concurrent_ops").await.unwrap();
         
         // Setup test data
         BenchmarkHelpers::setup_test_data(&namespace, "concurrent_key", 50, 1024).await.unwrap();
@@ -232,8 +233,8 @@ fn benchmark_data_sizes(c: &mut Criterion) {
         let storage = BenchmarkHelpers::create_test_storage();
         storage.initialize().await.unwrap();
         
-        let ns_hash = storage.create_namespace("data_sizes", None).await.unwrap();
-        let namespace = storage.namespace(ns_hash).await.unwrap();
+        storage.create_namespace("data_sizes", None).await.unwrap();
+        let namespace = storage.namespace("data_sizes").await.unwrap();
         
         (storage, namespace)
     });
@@ -285,8 +286,8 @@ fn benchmark_realistic_workloads(c: &mut Criterion) {
         let storage = BenchmarkHelpers::create_test_storage();
         storage.initialize().await.unwrap();
         
-        let ns_hash = storage.create_namespace("realistic_workloads", None).await.unwrap();
-        let namespace = storage.namespace(ns_hash).await.unwrap();
+        storage.create_namespace("realistic_workloads", None).await.unwrap();
+        let namespace = storage.namespace("realistic_workloads").await.unwrap();
         
         // Setup realistic test data
         for i in 0..100 {

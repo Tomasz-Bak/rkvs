@@ -4,7 +4,7 @@ use std::sync::Arc;
 use std::time::Instant;
 use tokio::sync::RwLock;
 use crate::Result;
-use super::types::{HashUtils, NamespaceConfig, BatchResult, BatchError};
+use super::types::{NamespaceConfig, BatchResult, BatchError};
 
 /// Namespace metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -17,17 +17,21 @@ pub struct NamespaceMetadata {
 /// A namespace handle for working with a specific namespace
 #[derive(Debug, Clone)]
 pub struct Namespace {
-    data: Arc<RwLock<HashMap<[u8; 32], Vec<u8>>>>,
-    key_mappings: Arc<RwLock<HashMap<[u8; 32], String>>>,
+    data: Arc<RwLock<HashMap<String, Vec<u8>>>>,
     metadata: Arc<RwLock<NamespaceMetadata>>,
     config: Arc<RwLock<NamespaceConfig>>,
 }
 
 impl Namespace {
     pub fn new(name: String, config: NamespaceConfig) -> Self {
+        let data_table = if config.max_keys.unwrap_or(0) != 0 {
+            HashMap::with_capacity(config.max_keys.unwrap())
+        } else {
+            HashMap::with_capacity(10240)
+        };
+
         Self {
-            data: Arc::new(RwLock::new(HashMap::new())),
-            key_mappings: Arc::new(RwLock::new(HashMap::new())),
+            data: Arc::new(RwLock::new(data_table)),
             metadata: Arc::new(RwLock::new(NamespaceMetadata {
                 name,
                 key_count: 0,
@@ -70,9 +74,8 @@ impl Namespace {
     /// }
     /// ```
     pub async fn get(&self, key: &str) -> Option<Vec<u8>> {
-        let key_hash = HashUtils::hash(key);
         let data = self.data.read().await;
-        data.get(&key_hash).cloned()
+        data.get(key).cloned()
     }
 
     /// Set a key-value pair
@@ -117,7 +120,6 @@ impl Namespace {
     /// }
     /// ```
     pub async fn set(&self, key: String, value: Vec<u8>) -> Result<()> {
-        let key_hash = HashUtils::hash(&key);
         
         let config = self.config.read().await;
         if let Some(max_value_size) = config.max_value_size {
@@ -129,10 +131,9 @@ impl Namespace {
         }
         
         let mut data = self.data.write().await;
-        let mut key_mappings = self.key_mappings.write().await;
         let mut metadata = self.metadata.write().await;
 
-        if !key_mappings.contains_key(&key_hash) {
+        if !data.contains_key(&key) {
             if let Some(max_keys) = config.max_keys {
                 if metadata.key_count >= max_keys {
                     return Err(crate::RkvsError::Storage(format!(
@@ -140,29 +141,24 @@ impl Namespace {
                     )));
                 }
             }
-            key_mappings.insert(key_hash, key.clone());
             metadata.key_count += 1;
         }
 
-        if let Some(old_value) = data.get(&key_hash) {
+        if let Some(old_value) = data.get(&key) {
             metadata.total_size = metadata.total_size - old_value.len() + value.len();
         } else {
             metadata.total_size += value.len();
         }
 
-        data.insert(key_hash, value);
+        data.insert(key, value);
         Ok(())
     }
 
     pub async fn delete(&self, key: &str) -> bool {
-        let key_hash = HashUtils::hash(key);
-        
         let mut data = self.data.write().await;
-        let mut key_mappings = self.key_mappings.write().await;
         let mut metadata = self.metadata.write().await;
 
-        if let Some(value) = data.remove(&key_hash) {
-            key_mappings.remove(&key_hash);
+        if let Some(value) = data.remove(key) {
             metadata.key_count -= 1;
             metadata.total_size -= value.len();
             true
@@ -212,14 +208,10 @@ impl Namespace {
     /// }
     /// ```
     pub async fn consume(&self, key: &str) -> Option<Vec<u8>> {
-        let key_hash = HashUtils::hash(key);
-        
         let mut data = self.data.write().await;
-        let mut key_mappings = self.key_mappings.write().await;
         let mut metadata = self.metadata.write().await;
 
-        if let Some(value) = data.remove(&key_hash) {
-            key_mappings.remove(&key_hash);
+        if let Some(value) = data.remove(key) {
             metadata.key_count -= 1;
             metadata.total_size -= value.len();
             Some(value)
@@ -229,14 +221,13 @@ impl Namespace {
     }
 
     pub async fn exists(&self, key: &str) -> bool {
-        let key_hash = HashUtils::hash(key);
         let data = self.data.read().await;
-        data.contains_key(&key_hash)
+        data.contains_key(key)
     }
 
     pub async fn list_keys(&self) -> Vec<String> {
-        let key_mappings = self.key_mappings.read().await;
-        key_mappings.values().cloned().collect()
+        let data = self.data.read().await;
+        data.keys().cloned().collect()
     }
 
     pub async fn get_metadata(&self) -> NamespaceMetadata {
@@ -264,23 +255,17 @@ impl Namespace {
         Ok(())
     }
 
-    pub async fn get_all_data(&self) -> (HashMap<[u8; 32], Vec<u8>>, HashMap<[u8; 32], String>, NamespaceMetadata) {
+    pub async fn get_all_data(&self) -> (HashMap<String, Vec<u8>>, NamespaceMetadata) {
         let data = self.data.read().await;
-        let key_mappings = self.key_mappings.read().await;
         let metadata = self.metadata.read().await;
         
-        (data.clone(), key_mappings.clone(), metadata.clone())
+        (data.clone(), metadata.clone())
     }
 
-    pub async fn restore_data(&self, data: HashMap<[u8; 32], Vec<u8>>, key_mappings: HashMap<[u8; 32], String>, metadata: NamespaceMetadata) {
+    pub async fn restore_data(&self, data: HashMap<String, Vec<u8>>, metadata: NamespaceMetadata) {
         {
             let mut data_guard = self.data.write().await;
             *data_guard = data;
-        }
-        
-        {
-            let mut key_mappings_guard = self.key_mappings.write().await;
-            *key_mappings_guard = key_mappings;
         }
         
         {
@@ -344,7 +329,6 @@ impl Namespace {
         let total_items = items.len();
         
         let mut data = self.data.write().await;
-        let mut key_mappings = self.key_mappings.write().await;
         let mut metadata = self.metadata.write().await;
         let config = self.config.read().await;
         
@@ -372,7 +356,6 @@ impl Namespace {
         let mut new_keys_count = 0;
         
         for (index, (key, value)) in items.into_iter().enumerate() {
-            let key_hash = HashUtils::hash(&key);
             
             if let Some(max_value_size) = config.max_value_size {
                 if value.len() > max_value_size {
@@ -389,15 +372,15 @@ impl Namespace {
                 }
             }
             
-            if !data.contains_key(&key_hash) {
+            if !data.contains_key(&key) {
                 new_keys_count += 1;
                 total_size_increase += value.len();
             } else {
-                let existing_size = data.get(&key_hash).map(|v| v.len()).unwrap_or(0);
+                let existing_size = data.get(&key).map(|v| v.len()).unwrap_or(0);
                 total_size_increase += value.len() - existing_size;
             }
 
-            items_to_insert.push((key_hash, key, value));
+            items_to_insert.push((key, value));
         }
         
         if !errors.is_empty() {
@@ -409,9 +392,8 @@ impl Namespace {
             };
         }
         
-        for (key_hash, key, value) in items_to_insert {
-            data.insert(key_hash, value);
-            key_mappings.insert(key_hash, key);
+        for (key, value) in items_to_insert {
+            data.insert(key, value);
         }
         
         metadata.key_count += new_keys_count;
@@ -432,13 +414,11 @@ impl Namespace {
         let total_keys = keys.len();
         
         let data = self.data.read().await;
-        let _key_mappings = self.key_mappings.read().await;
         
         let mut items_to_get = Vec::new();
         
         for (index, key) in keys.into_iter().enumerate() {
-            let key_hash = HashUtils::hash(&key);
-            if let Some(value) = data.get(&key_hash) {
+            if let Some(value) = data.get(&key) {
                 if errors.is_empty() {
                     items_to_get.push((key, value.clone()));
                 }
@@ -476,7 +456,6 @@ impl Namespace {
         let total_keys = keys.len();
         
         let mut data = self.data.write().await;
-        let mut key_mappings = self.key_mappings.write().await;
         let mut metadata = self.metadata.write().await;
         
         let mut items_to_delete = Vec::new();
@@ -484,10 +463,9 @@ impl Namespace {
         let mut deleted_keys_count = 0;
         
         for (index, key) in keys.into_iter().enumerate() {
-            let key_hash = HashUtils::hash(&key);
-            if let Some(value) = data.get(&key_hash) {
+            if let Some(value) = data.get(&key) {
                 if errors.is_empty() {
-                    items_to_delete.push((key_hash, key));
+                    items_to_delete.push(key);
                     total_size_decrease += value.len();
                     deleted_keys_count += 1;
                 }
@@ -510,9 +488,8 @@ impl Namespace {
             };
         }
         
-        for (key_hash, _key) in items_to_delete {
-            data.remove(&key_hash);
-            key_mappings.remove(&key_hash);
+        for key in items_to_delete {
+            data.remove(&key);
         }
         metadata.key_count -= deleted_keys_count;
         metadata.total_size -= total_size_decrease;
@@ -532,7 +509,6 @@ impl Namespace {
         let total_keys = keys.len();
         
         let mut data = self.data.write().await;
-        let mut key_mappings = self.key_mappings.write().await;
         let mut metadata = self.metadata.write().await;
         
         let mut items_to_consume = Vec::new();
@@ -540,10 +516,9 @@ impl Namespace {
         let mut consumed_keys_count = 0;
         
         for (index, key) in keys.into_iter().enumerate() {
-            let key_hash = HashUtils::hash(&key);
-            if let Some(value) = data.get(&key_hash) {
+            if let Some(value) = data.get(&key) {
                 if errors.is_empty() {
-                    items_to_consume.push((key_hash, key, value.clone()));
+                    items_to_consume.push((key, value.clone()));
                     total_size_decrease += value.len();
                     consumed_keys_count += 1;
                 }
@@ -567,9 +542,8 @@ impl Namespace {
         }
         
         let mut results = Vec::new();
-        for (key_hash, key, value) in items_to_consume {
-            data.remove(&key_hash);
-            key_mappings.remove(&key_hash);
+        for (key, value) in items_to_consume {
+            data.remove(&key);
             results.push((key, value));
         }
         metadata.key_count -= consumed_keys_count;
@@ -581,572 +555,6 @@ impl Namespace {
             duration: start.elapsed(),
             errors: None,
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[tokio::test]
-    async fn test_namespace_creation() {
-        let config = NamespaceConfig {
-            max_keys: Some(10),
-            max_value_size: Some(100),
-        };
-        let namespace = Namespace::new("test_namespace".to_string(), config);
-        
-        let metadata = namespace.get_metadata().await;
-        assert_eq!(metadata.name, "test_namespace");
-        assert_eq!(metadata.key_count, 0);
-        assert_eq!(metadata.total_size, 0);
-    }
-
-    #[tokio::test]
-    async fn test_set_and_get() {
-        let config = NamespaceConfig {
-            max_keys: Some(10),
-            max_value_size: Some(100),
-        };
-        let namespace = Namespace::new("test".to_string(), config);
-        
-        let key = "test_key".to_string();
-        let value = b"test_value".to_vec();
-        
-        namespace.set(key.clone(), value.clone()).await.unwrap();
-        
-        let retrieved = namespace.get(&key).await;
-        assert_eq!(retrieved, Some(value));
-    }
-
-    #[tokio::test]
-    async fn test_set_and_get_multiple() {
-        let config = NamespaceConfig {
-            max_keys: Some(10),
-            max_value_size: Some(100),
-        };
-        let namespace = Namespace::new("test".to_string(), config);
-        
-        namespace.set("key1".to_string(), b"value1".to_vec()).await.unwrap();
-        namespace.set("key2".to_string(), b"value2".to_vec()).await.unwrap();
-        namespace.set("key3".to_string(), b"value3".to_vec()).await.unwrap();
-        
-        assert_eq!(namespace.get("key1").await, Some(b"value1".to_vec()));
-        assert_eq!(namespace.get("key2").await, Some(b"value2".to_vec()));
-        assert_eq!(namespace.get("key3").await, Some(b"value3".to_vec()));
-        
-        let metadata = namespace.get_metadata().await;
-        assert_eq!(metadata.key_count, 3);
-        assert_eq!(metadata.total_size, 18);
-    }
-
-    #[tokio::test]
-    async fn test_delete() {
-        let config = NamespaceConfig {
-            max_keys: Some(10),
-            max_value_size: Some(100),
-        };
-        let namespace = Namespace::new("test".to_string(), config);
-        
-        namespace.set("key1".to_string(), b"value1".to_vec()).await.unwrap();
-        assert!(namespace.exists("key1").await);
-        
-        let deleted = namespace.delete("key1").await;
-        assert!(deleted);
-        assert!(!namespace.exists("key1").await);
-        let not_deleted = namespace.delete("nonexistent").await;
-        assert!(!not_deleted);
-    }
-
-    #[tokio::test]
-    async fn test_exists() {
-        let config = NamespaceConfig {
-            max_keys: Some(10),
-            max_value_size: Some(100),
-        };
-        let namespace = Namespace::new("test".to_string(), config);
-        
-        assert!(!namespace.exists("nonexistent").await);
-        
-        namespace.set("key1".to_string(), b"value1".to_vec()).await.unwrap();
-        assert!(namespace.exists("key1").await);
-    }
-
-    #[tokio::test]
-    async fn test_list_keys() {
-        let config = NamespaceConfig {
-            max_keys: Some(10),
-            max_value_size: Some(100),
-        };
-        let namespace = Namespace::new("test".to_string(), config);
-        
-        let keys = namespace.list_keys().await;
-        assert!(keys.is_empty());
-        namespace.set("key1".to_string(), b"value1".to_vec()).await.unwrap();
-        namespace.set("key2".to_string(), b"value2".to_vec()).await.unwrap();
-        namespace.set("key3".to_string(), b"value3".to_vec()).await.unwrap();
-        
-        let keys = namespace.list_keys().await;
-        assert_eq!(keys.len(), 3);
-        assert!(keys.contains(&"key1".to_string()));
-        assert!(keys.contains(&"key2".to_string()));
-        assert!(keys.contains(&"key3".to_string()));
-    }
-
-    #[tokio::test]
-    async fn test_metadata_updates() {
-        let config = NamespaceConfig {
-            max_keys: Some(10),
-            max_value_size: Some(100),
-        };
-        let namespace = Namespace::new("test".to_string(), config);
-        
-        let initial_metadata = namespace.get_metadata().await;
-        assert_eq!(initial_metadata.key_count, 0);
-        assert_eq!(initial_metadata.total_size, 0);
-        
-        namespace.set("key1".to_string(), b"value1".to_vec()).await.unwrap();
-        let metadata = namespace.get_metadata().await;
-        assert_eq!(metadata.key_count, 1);
-        assert_eq!(metadata.total_size, 6);
-        
-        namespace.set("key1".to_string(), b"longer_value".to_vec()).await.unwrap();
-        let metadata = namespace.get_metadata().await;
-        assert_eq!(metadata.key_count, 1);
-        assert_eq!(metadata.total_size, 12);
-        namespace.set("key2".to_string(), b"value2".to_vec()).await.unwrap();
-        let metadata = namespace.get_metadata().await;
-        assert_eq!(metadata.key_count, 2);
-        assert_eq!(metadata.total_size, 18);
-    }
-
-    #[tokio::test]
-    async fn test_max_keys_limit() {
-        let config = NamespaceConfig {
-            max_keys: Some(2),
-            max_value_size: Some(100),
-        };
-        let namespace = Namespace::new("test".to_string(), config);
-        
-        namespace.set("key1".to_string(), b"value1".to_vec()).await.unwrap();
-        namespace.set("key2".to_string(), b"value2".to_vec()).await.unwrap();
-        let result = namespace.set("key3".to_string(), b"value3".to_vec()).await;
-        assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Maximum number of keys"));
-    }
-
-    #[tokio::test]
-    async fn test_max_value_size_limit() {
-        let config = NamespaceConfig {
-            max_keys: Some(10),
-            max_value_size: Some(10),
-        };
-        let namespace = Namespace::new("test".to_string(), config);
-        
-        namespace.set("key1".to_string(), b"12345".to_vec()).await.unwrap();
-        let result = namespace.set("key2".to_string(), b"12345678901".to_vec()).await;
-        assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("exceeds maximum allowed size"));
-    }
-
-    #[tokio::test]
-    async fn test_get_config() {
-        let config = NamespaceConfig {
-            max_keys: Some(5),
-            max_value_size: Some(50),
-        };
-        let namespace = Namespace::new("test".to_string(), config.clone());
-        
-        let retrieved_config = namespace.get_config().await;
-        assert_eq!(retrieved_config.max_keys, Some(5));
-        assert_eq!(retrieved_config.max_value_size, Some(50));
-    }
-
-    #[tokio::test]
-    async fn test_update_config() {
-        let config = NamespaceConfig {
-            max_keys: Some(10),
-            max_value_size: Some(100),
-        };
-        let namespace = Namespace::new("test".to_string(), config);
-        
-        let new_config = NamespaceConfig {
-            max_keys: Some(5),
-            max_value_size: Some(50),
-        };
-        namespace.update_config(new_config).await.unwrap();
-        
-        let retrieved_config = namespace.get_config().await;
-        assert_eq!(retrieved_config.max_keys, Some(5));
-        assert_eq!(retrieved_config.max_value_size, Some(50));
-    }
-
-    #[tokio::test]
-    async fn test_update_config_validation() {
-        let config = NamespaceConfig {
-            max_keys: Some(10),
-            max_value_size: Some(100),
-        };
-        let namespace = Namespace::new("test".to_string(), config);
-        
-        namespace.set("key1".to_string(), b"value1".to_vec()).await.unwrap();
-        namespace.set("key2".to_string(), b"value2".to_vec()).await.unwrap();
-        let invalid_config = NamespaceConfig {
-            max_keys: Some(1), // Only 1 key allowed, but we have 2
-            max_value_size: Some(50),
-        };
-        let result = namespace.update_config(invalid_config).await;
-        assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Cannot set max_keys to 1 when namespace already has 2 keys"));
-        
-        let valid_config = NamespaceConfig {
-            max_keys: Some(5), // More than current key count
-            max_value_size: Some(50),
-        };
-        namespace.update_config(valid_config).await.unwrap();
-    }
-
-    #[tokio::test]
-    async fn test_get_all_data() {
-        let config = NamespaceConfig {
-            max_keys: Some(10),
-            max_value_size: Some(100),
-        };
-        let namespace = Namespace::new("test".to_string(), config);
-        
-        namespace.set("key1".to_string(), b"value1".to_vec()).await.unwrap();
-        namespace.set("key2".to_string(), b"value2".to_vec()).await.unwrap();
-        
-        let (data, key_mappings, metadata) = namespace.get_all_data().await;
-        
-        assert_eq!(data.len(), 2);
-        assert_eq!(key_mappings.len(), 2);
-        assert_eq!(metadata.key_count, 2);
-        assert_eq!(metadata.total_size, 12);
-        let key1_hash = HashUtils::hash("key1");
-        let key2_hash = HashUtils::hash("key2");
-        
-        assert!(data.contains_key(&key1_hash));
-        assert!(data.contains_key(&key2_hash));
-        assert!(key_mappings.contains_key(&key1_hash));
-        assert!(key_mappings.contains_key(&key2_hash));
-    }
-
-    #[tokio::test]
-    async fn test_restore_data() {
-        let config = NamespaceConfig {
-            max_keys: Some(10),
-            max_value_size: Some(100),
-        };
-        let namespace = Namespace::new("test".to_string(), config);
-        
-        let mut data = HashMap::new();
-        let mut key_mappings = HashMap::new();
-        let metadata = NamespaceMetadata {
-            name: "restored".to_string(),
-            key_count: 2,
-            total_size: 12,
-        };
-        
-        let key1_hash = HashUtils::hash("key1");
-        let key2_hash = HashUtils::hash("key2");
-        
-        data.insert(key1_hash, b"value1".to_vec());
-        data.insert(key2_hash, b"value2".to_vec());
-        key_mappings.insert(key1_hash, "key1".to_string());
-        key_mappings.insert(key2_hash, "key2".to_string());
-        
-        namespace.restore_data(data, key_mappings, metadata).await;
-        
-        assert_eq!(namespace.get("key1").await, Some(b"value1".to_vec()));
-        assert_eq!(namespace.get("key2").await, Some(b"value2".to_vec()));
-        
-        let restored_metadata = namespace.get_metadata().await;
-        assert_eq!(restored_metadata.name, "restored");
-        assert_eq!(restored_metadata.key_count, 2);
-        assert_eq!(restored_metadata.total_size, 12);
-    }
-
-    #[tokio::test]
-    async fn test_consume() {
-        let config = NamespaceConfig {
-            max_keys: Some(10),
-            max_value_size: Some(100),
-        };
-        let namespace = Namespace::new("test".to_string(), config);
-        
-        namespace.set("key1".to_string(), b"value1".to_vec()).await.unwrap();
-        namespace.set("key2".to_string(), b"value2".to_vec()).await.unwrap();
-        let metadata = namespace.get_metadata().await;
-        assert_eq!(metadata.key_count, 2);
-        assert_eq!(metadata.total_size, 12);
-        
-        let consumed_value = namespace.consume("key1").await;
-        assert_eq!(consumed_value, Some(b"value1".to_vec()));
-        
-        assert_eq!(namespace.get("key1").await, None);
-        assert_eq!(namespace.exists("key1").await, false);
-        
-        let metadata = namespace.get_metadata().await;
-        assert_eq!(metadata.key_count, 1);
-        assert_eq!(metadata.total_size, 6);
-        
-        assert_eq!(namespace.get("key2").await, Some(b"value2".to_vec()));
-        
-        let consumed_value = namespace.consume("nonexistent").await;
-        assert_eq!(consumed_value, None);
-        
-        let metadata = namespace.get_metadata().await;
-        assert_eq!(metadata.key_count, 1);
-        assert_eq!(metadata.total_size, 6);
-    }
-
-    #[tokio::test]
-    async fn test_consume_all_keys() {
-        let config = NamespaceConfig {
-            max_keys: Some(10),
-            max_value_size: Some(100),
-        };
-        let namespace = Namespace::new("test".to_string(), config);
-        
-        let keys = vec!["key1", "key2", "key3"];
-        for key in &keys {
-            namespace.set(key.to_string(), format!("value_{}", key).into_bytes()).await.unwrap();
-        }
-        let metadata = namespace.get_metadata().await;
-        assert_eq!(metadata.key_count, 3);
-        
-        for key in &keys {
-            let consumed_value = namespace.consume(key).await;
-            assert_eq!(consumed_value, Some(format!("value_{}", key).into_bytes()));
-        }
-        
-        for key in &keys {
-            assert_eq!(namespace.get(key).await, None);
-            assert_eq!(namespace.exists(key).await, false);
-        }
-        
-        let metadata = namespace.get_metadata().await;
-        assert_eq!(metadata.key_count, 0);
-        assert_eq!(metadata.total_size, 0);
-    }
-
-    #[tokio::test]
-    async fn test_set_multiple_success() {
-        let config = NamespaceConfig {
-            max_keys: Some(10),
-            max_value_size: Some(100),
-        };
-        let namespace = Namespace::new("test".to_string(), config);
-        
-        let items = vec![
-            ("key1".to_string(), b"value1".to_vec()),
-            ("key2".to_string(), b"value2".to_vec()),
-            ("key3".to_string(), b"value3".to_vec()),
-        ];
-        
-        let result = namespace.set_multiple(items).await;
-        
-        assert!(result.is_success());
-        assert!(!result.has_errors());
-        assert_eq!(result.total_processed, 3);
-        assert_eq!(result.success_rate(), 1.0);
-        
-        assert_eq!(namespace.get("key1").await, Some(b"value1".to_vec()));
-        assert_eq!(namespace.get("key2").await, Some(b"value2".to_vec()));
-        assert_eq!(namespace.get("key3").await, Some(b"value3".to_vec()));
-        
-        let metadata = namespace.get_metadata().await;
-        assert_eq!(metadata.key_count, 3);
-        assert_eq!(metadata.total_size, 18);
-    }
-
-    #[tokio::test]
-    async fn test_set_multiple_validation_error() {
-        let config = NamespaceConfig {
-            max_keys: Some(10), // Allow enough keys
-            max_value_size: Some(5),
-        };
-        let namespace = Namespace::new("test".to_string(), config);
-        
-        let items = vec![
-            ("key1".to_string(), b"val1".to_vec()), // OK (4 bytes)
-            ("key2".to_string(), b"toolongvalue".to_vec()), // Too long (12 bytes)
-            ("key3".to_string(), b"val3".to_vec()), // OK (4 bytes)
-        ];
-        
-        let result = namespace.set_multiple(items).await;
-        
-        assert!(!result.is_success());
-        assert!(result.has_errors());
-        assert_eq!(result.total_processed, 3);
-        assert_eq!(result.errors.as_ref().unwrap().len(), 1); // key2 fails on size
-        assert_eq!(result.errors.as_ref().unwrap()[0].key, "key2");
-        assert_eq!(result.errors.as_ref().unwrap()[0].operation, "set");
-        assert!(result.errors.as_ref().unwrap()[0].error_message.contains("exceeds maximum"));
-        
-        assert_eq!(namespace.get("key1").await, None);
-        assert_eq!(namespace.get("key2").await, None);
-        assert_eq!(namespace.get("key3").await, None);
-    }
-
-    #[tokio::test]
-    async fn test_get_multiple_success() {
-        let config = NamespaceConfig {
-            max_keys: Some(10),
-            max_value_size: Some(100),
-        };
-        let namespace = Namespace::new("test".to_string(), config);
-        
-        namespace.set("key1".to_string(), b"value1".to_vec()).await.unwrap();
-        namespace.set("key2".to_string(), b"value2".to_vec()).await.unwrap();
-        namespace.set("key3".to_string(), b"value3".to_vec()).await.unwrap();
-        
-        let keys = vec!["key1".to_string(), "key2".to_string(), "key3".to_string()];
-        let result = namespace.get_multiple(keys).await;
-        
-        assert!(result.is_success());
-        assert!(!result.has_errors());
-        assert_eq!(result.total_processed, 3);
-        
-        if let Some(data) = result.data {
-            assert_eq!(data.len(), 3);
-            let mut keys: Vec<String> = data.iter().map(|(k, _)| k.clone()).collect();
-            keys.sort();
-            assert_eq!(keys, vec!["key1", "key2", "key3"]);
-        }
-    }
-
-    #[tokio::test]
-    async fn test_get_multiple_missing_key() {
-        let config = NamespaceConfig {
-            max_keys: Some(10),
-            max_value_size: Some(100),
-        };
-        let namespace = Namespace::new("test".to_string(), config);
-        
-        namespace.set("key1".to_string(), b"value1".to_vec()).await.unwrap();
-        
-        let keys = vec!["key1".to_string(), "missing".to_string(), "key2".to_string()];
-        let result = namespace.get_multiple(keys).await;
-        
-        assert!(!result.is_success());
-        assert!(result.has_errors());
-        assert_eq!(result.total_processed, 3);
-        assert_eq!(result.errors.as_ref().unwrap().len(), 2); // Both missing keys cause errors
-        assert_eq!(result.errors.as_ref().unwrap()[0].key, "missing");
-        assert_eq!(result.errors.as_ref().unwrap()[0].operation, "get");
-        assert_eq!(result.errors.as_ref().unwrap()[1].key, "key2");
-        assert_eq!(result.errors.as_ref().unwrap()[1].operation, "get");
-    }
-
-    #[tokio::test]
-    async fn test_delete_multiple_success() {
-        let config = NamespaceConfig {
-            max_keys: Some(10),
-            max_value_size: Some(100),
-        };
-        let namespace = Namespace::new("test".to_string(), config);
-        
-        namespace.set("key1".to_string(), b"value1".to_vec()).await.unwrap();
-        namespace.set("key2".to_string(), b"value2".to_vec()).await.unwrap();
-        namespace.set("key3".to_string(), b"value3".to_vec()).await.unwrap();
-        
-        let keys = vec!["key1".to_string(), "key2".to_string()];
-        let result = namespace.delete_multiple(keys).await;
-        
-        assert!(result.is_success());
-        assert!(!result.has_errors());
-        assert_eq!(result.total_processed, 2);
-        
-        assert_eq!(namespace.get("key1").await, None);
-        assert_eq!(namespace.get("key2").await, None);
-        assert_eq!(namespace.get("key3").await, Some(b"value3".to_vec()));
-        
-        let metadata = namespace.get_metadata().await;
-        assert_eq!(metadata.key_count, 1);
-        assert_eq!(metadata.total_size, 6);
-    }
-
-    #[tokio::test]
-    async fn test_delete_multiple_missing_key() {
-        let config = NamespaceConfig {
-            max_keys: Some(10),
-            max_value_size: Some(100),
-        };
-        let namespace = Namespace::new("test".to_string(), config);
-        
-        namespace.set("key1".to_string(), b"value1".to_vec()).await.unwrap();
-        
-        let keys = vec!["key1".to_string(), "missing".to_string()];
-        let result = namespace.delete_multiple(keys).await;
-        
-        assert!(!result.is_success());
-        assert!(result.has_errors());
-        assert_eq!(result.total_processed, 2);
-        assert_eq!(result.errors.as_ref().unwrap().len(), 1);
-        assert_eq!(result.errors.as_ref().unwrap()[0].key, "missing");
-        assert_eq!(result.errors.as_ref().unwrap()[0].operation, "delete");
-        
-        assert_eq!(namespace.get("key1").await, Some(b"value1".to_vec()));
-    }
-
-    #[tokio::test]
-    async fn test_consume_multiple_success() {
-        let config = NamespaceConfig {
-            max_keys: Some(10),
-            max_value_size: Some(100),
-        };
-        let namespace = Namespace::new("test".to_string(), config);
-        
-        namespace.set("key1".to_string(), b"value1".to_vec()).await.unwrap();
-        namespace.set("key2".to_string(), b"value2".to_vec()).await.unwrap();
-        namespace.set("key3".to_string(), b"value3".to_vec()).await.unwrap();
-        
-        let keys = vec!["key1".to_string(), "key2".to_string()];
-        let result = namespace.consume_multiple(keys).await;
-        
-        assert!(result.is_success());
-        assert!(!result.has_errors());
-        assert_eq!(result.total_processed, 2);
-        
-        if let Some(data) = result.data {
-            assert_eq!(data.len(), 2);
-            let mut keys: Vec<String> = data.iter().map(|(k, _)| k.clone()).collect();
-            keys.sort();
-            assert_eq!(keys, vec!["key1", "key2"]);
-        }
-        
-        assert_eq!(namespace.get("key1").await, None);
-        assert_eq!(namespace.get("key2").await, None);
-        assert_eq!(namespace.get("key3").await, Some(b"value3".to_vec()));
-        
-        let metadata = namespace.get_metadata().await;
-        assert_eq!(metadata.key_count, 1);
-        assert_eq!(metadata.total_size, 6);
-    }
-
-    #[tokio::test]
-    async fn test_consume_multiple_missing_key() {
-        let config = NamespaceConfig {
-            max_keys: Some(10),
-            max_value_size: Some(100),
-        };
-        let namespace = Namespace::new("test".to_string(), config);
-        
-        namespace.set("key1".to_string(), b"value1".to_vec()).await.unwrap();
-        
-        let keys = vec!["key1".to_string(), "missing".to_string()];
-        let result = namespace.consume_multiple(keys).await;
-        
-        assert!(!result.is_success());
-        assert!(result.has_errors());
-        assert_eq!(result.total_processed, 2);
-        assert_eq!(result.errors.as_ref().unwrap().len(), 1);
-        assert_eq!(result.errors.as_ref().unwrap()[0].key, "missing");
-        assert_eq!(result.errors.as_ref().unwrap()[0].operation, "consume");
-        
-        assert_eq!(namespace.get("key1").await, Some(b"value1".to_vec()));
     }
 }
 

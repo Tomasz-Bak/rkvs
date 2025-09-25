@@ -34,10 +34,10 @@
 //!         max_keys: Some(1000),
 //!         max_value_size: Some(1024 * 1024), // 1MB
 //!     };
-//!     let ns_hash = storage.create_namespace("my_app", Some(config)).await?;
+//!     let namespace_id = storage.create_namespace("my_app", Some(config)).await?;
 //!     
 //!     // Get the namespace handle
-//!     let namespace = storage.namespace(ns_hash).await?;
+//!     let namespace = storage.namespace(&namespace_id).await?;
 //!     
 //!     // Store data
 //!     namespace.set("user:123".to_string(), b"John Doe".to_vec()).await?;

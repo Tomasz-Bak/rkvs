@@ -1,14 +1,15 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
+use tokio::sync::RwLock;
 
 use crate::Result;
 use super::types::{NamespaceStats, StorageConfig, NamespaceConfig, HashUtils};
 use super::namespace::Namespace;
 use super::persistence::FilePersistence;
 
-/// Storage manager for hashtable-based key-value storage with namespaces
+/// Storage manager for key-value storage with namespaces
 /// 
 /// The `StorageManager` is the main entry point for working with RKVS. It manages
 /// multiple namespaces and provides persistence capabilities.
@@ -31,16 +32,16 @@ use super::persistence::FilePersistence;
 ///         max_keys: Some(1000),
 ///         max_value_size: Some(1024 * 1024),
 ///     };
-///     let ns_hash = storage.create_namespace("my_app", Some(config)).await?;
+///     storage.create_namespace("my_app", Some(config)).await?;
 ///     
-///     let namespace = storage.namespace(ns_hash).await?;
+///     let namespace = storage.namespace("my_app").await?;
 ///     namespace.set("key".to_string(), b"value".to_vec()).await?;
 ///     
 ///     Ok(())
 /// }
 /// ```
 pub struct StorageManager {
-    namespaces: Arc<Mutex<HashMap<[u8; 32], Arc<Namespace>>>>,
+    namespaces: Arc<RwLock<HashMap<String, Arc<Namespace>>>>,
     config: StorageConfig,
     persistence: Option<FilePersistence>,
     initialized: Arc<AtomicBool>,
@@ -151,7 +152,7 @@ impl StorageManager {
     
     fn new(config: StorageConfig, persistence: Option<FilePersistence>) -> Self {
         Self {
-            namespaces: Arc::new(Mutex::new(HashMap::new())),
+            namespaces: Arc::new(RwLock::new(HashMap::new())),
             config,
             persistence,
             initialized: Arc::new(AtomicBool::new(false)),
@@ -192,7 +193,7 @@ impl StorageManager {
         
         if let Some(persistence) = &self.persistence {
             let data = persistence.load().await?;
-            let mut namespaces = self.namespaces.lock().unwrap();
+            let mut namespaces = self.namespaces.write().await;
             *namespaces = data;
         }
         
@@ -232,7 +233,7 @@ impl StorageManager {
     /// ```
     pub async fn save(&self) -> Result<()> {
         if let Some(persistence) = &self.persistence {
-            let namespaces = self.namespaces.lock().unwrap();
+            let namespaces = self.namespaces.read().await;
             persistence.save(&namespaces).await?;
         }
         Ok(())
@@ -263,8 +264,7 @@ impl StorageManager {
     /// 
     /// # Returns
     /// 
-    /// Returns the namespace hash that can be used to access the namespace,
-    /// or an error if creation fails.
+    /// Returns `Ok(())` if creation succeeds, or an error if it fails.
     /// 
     /// # Example
     /// 
@@ -277,26 +277,24 @@ impl StorageManager {
     ///     storage.initialize().await?;
     ///     
     ///     // Create namespace with default config
-    ///     let ns_hash1 = storage.create_namespace("my_app", None).await?;
+    ///     storage.create_namespace("my_app", None).await?;
     ///     
     ///     // Create namespace with custom config
     ///     let config = NamespaceConfig {
     ///         max_keys: Some(1000),
     ///         max_value_size: Some(1024 * 1024),
     ///     };
-    ///     let ns_hash2 = storage.create_namespace("my_app2", Some(config)).await?;
+    ///     storage.create_namespace("my_app2", Some(config)).await?;
     ///     
     ///     Ok(())
     /// }
     /// ```
-    pub async fn create_namespace(&self, name: &str, config: Option<NamespaceConfig>) -> Result<[u8; 32]> {
+    pub async fn create_namespace(&self, name: &str, config: Option<NamespaceConfig>) -> Result<()> {
         self.ensure_initialized().await?;
         
-        let namespace_hash = HashUtils::hash(name);
+        let mut namespaces = self.namespaces.write().await;
         
-        let mut namespaces = self.namespaces.lock().unwrap();
-        
-        if namespaces.contains_key(&namespace_hash) {
+        if namespaces.contains_key(name) {
             return Err(crate::RkvsError::Storage(format!("Namespace '{}' already exists", name)));
         }
         
@@ -314,59 +312,55 @@ impl StorageManager {
         });
         
         let namespace = Arc::new(Namespace::new(name.to_string(), namespace_config));
-        namespaces.insert(namespace_hash, namespace);
-        Ok(namespace_hash)
+        namespaces.insert(name.to_string(), namespace);
+        Ok(())
     }
 
     /// Create a new namespace with custom configuration
-    pub async fn create_namespace_with_config(&self, name: &str, config: NamespaceConfig) -> Result<[u8; 32]> {
+    pub async fn create_namespace_with_config(&self, name: &str, config: NamespaceConfig) -> Result<()> {
         self.create_namespace(name, Some(config)).await
     }
 
-    /// Hash a namespace name for internal use
-    pub fn hash_namespace_name(&self, name: &str) -> [u8; 32] {
-        HashUtils::hash(name)
-    }
 
-    /// Update the configuration of an existing namespace using a pre-computed hash
-    pub async fn update_namespace_config(&self, namespace_hash: [u8; 32], new_config: NamespaceConfig) -> Result<()> {
+    /// Update the configuration of an existing namespace using a pre-computed ID
+    pub async fn update_namespace_config(&self, name: &str, new_config: NamespaceConfig) -> Result<()> {
         self.ensure_initialized().await?;
         
-        let namespaces = self.namespaces.lock().unwrap();
+        let namespaces = self.namespaces.read().await;
         
-        if let Some(namespace) = namespaces.get(&namespace_hash) {
+        if let Some(namespace) = namespaces.get(name) {
             namespace.update_config(new_config).await
         } else {
-            Err(crate::RkvsError::Storage(format!("Namespace with hash {:02x?} does not exist", namespace_hash)))
+            Err(crate::RkvsError::Storage(format!("Namespace with name {} does not exist", name)))
         }
     }
 
-    /// Get a namespace handle using a pre-computed hash
+    /// Get a namespace handle using a pre-computed ID
     /// Returns an error if the namespace doesn't exist
-    pub async fn namespace(&self, namespace_hash: [u8; 32]) -> Result<Arc<Namespace>> {
+    pub async fn namespace(&self, name: &str) -> Result<Arc<Namespace>> {
         self.ensure_initialized().await?;
         
-        let namespaces = self.namespaces.lock().unwrap();
+        let namespaces = self.namespaces.read().await;
         
-        if let Some(namespace) = namespaces.get(&namespace_hash) {
+        if let Some(namespace) = namespaces.get(name) {
             Ok(namespace.clone())
         } else {
-            Err(crate::RkvsError::Storage(format!("Namespace with hash {:02x?} does not exist", namespace_hash)))
+            Err(crate::RkvsError::Storage(format!("Namespace with name {} does not exist", name)))
         }
     }
 
 
 
-    /// Delete an entire namespace using a pre-computed hash
-    pub async fn delete_namespace(&self, namespace_hash: [u8; 32]) -> Result<()> {
+    /// Delete an entire namespace using a pre-computed ID
+    pub async fn delete_namespace(&self, name: &str) -> Result<()> {
         self.ensure_initialized().await?;
         
-        let mut namespaces = self.namespaces.lock().unwrap();
+        let mut namespaces = self.namespaces.write().await;
         
-        if namespaces.remove(&namespace_hash).is_some() {
+        if namespaces.remove(name).is_some() {
             Ok(())
         } else {
-            Err(crate::RkvsError::Storage(format!("Namespace with hash {:02x?} does not exist", namespace_hash)))
+            Err(crate::RkvsError::Storage(format!("Namespace with name {} does not exist", name)))
         }
     }
 
@@ -375,7 +369,7 @@ impl StorageManager {
     pub async fn list_namespaces(&self) -> Result<Vec<String>> {
         self.ensure_initialized().await?;
         
-        let namespaces = self.namespaces.lock().unwrap();
+        let namespaces = self.namespaces.read().await;
         let mut names = Vec::new();
         
         for namespace in namespaces.values() {
@@ -386,11 +380,11 @@ impl StorageManager {
         Ok(names)
     }
 
-    /// Get namespace statistics using a pre-computed hash
-    pub async fn get_namespace_stats(&self, namespace_hash: [u8; 32]) -> Result<Option<NamespaceStats>> {
+    /// Get namespace statistics using a pre-computed ID
+    pub async fn get_namespace_stats(&self, name: &str) -> Result<Option<NamespaceStats>> {
         self.ensure_initialized().await?;
         
-        let ns = self.namespace(namespace_hash).await?;
+        let ns = self.namespace(name).await?;
         let metadata = ns.get_metadata().await;
         
         Ok(Some(NamespaceStats {
@@ -404,7 +398,7 @@ impl StorageManager {
     pub async fn get_all_namespace_stats(&self) -> Result<Vec<NamespaceStats>> {
         self.ensure_initialized().await?;
         
-        let namespaces = self.namespaces.lock().unwrap();
+        let namespaces = self.namespaces.read().await;
         let mut stats = Vec::new();
         
         for namespace in namespaces.values() {
@@ -423,7 +417,7 @@ impl StorageManager {
     pub async fn get_namespace_count(&self) -> Result<usize> {
         self.ensure_initialized().await?;
         
-        let namespaces = self.namespaces.lock().unwrap();
+        let namespaces = self.namespaces.read().await;
         Ok(namespaces.len())
     }
 
@@ -431,7 +425,7 @@ impl StorageManager {
     pub async fn get_total_key_count(&self) -> Result<usize> {
         self.ensure_initialized().await?;
         
-        let namespaces = self.namespaces.lock().unwrap();
+        let namespaces = self.namespaces.read().await;
         let mut total = 0;
         
         for namespace in namespaces.values() {
@@ -493,8 +487,7 @@ mod tests {
         let storage = create_test_storage();
         storage.initialize().await.unwrap();
         
-        let namespace_hash = storage.create_namespace("test_namespace", None).await.unwrap();
-        assert!(!namespace_hash.is_empty());
+        storage.create_namespace("test_namespace", None).await.unwrap();
         
         // Try to create the same namespace again - should fail
         let result = storage.create_namespace("test_namespace", None).await;
@@ -512,8 +505,8 @@ mod tests {
             max_value_size: Some(512),
         };
         
-        let namespace_hash = storage.create_namespace_with_config("test", custom_config).await.unwrap();
-        assert!(!namespace_hash.is_empty());
+        storage.create_namespace_with_config("test", custom_config).await.unwrap();
+        assert!(storage.namespace("test").await.is_ok());
     }
 
     #[tokio::test]
@@ -521,8 +514,8 @@ mod tests {
         let storage = create_test_storage();
         storage.initialize().await.unwrap();
         
-        let namespace_hash = storage.create_namespace("test", None).await.unwrap();
-        let namespace = storage.namespace(namespace_hash).await.unwrap();
+        storage.create_namespace("test", None).await.unwrap();
+        let namespace = storage.namespace("test").await.unwrap();
         
         // Test basic operations
         namespace.set("key1".to_string(), b"value1".to_vec()).await.unwrap();
@@ -539,13 +532,13 @@ mod tests {
         let storage = create_test_storage();
         storage.initialize().await.unwrap();
         
-        let namespace_hash = storage.create_namespace("test", None).await.unwrap();
+        storage.create_namespace("test", None).await.unwrap();
         
         // Delete the namespace
-        storage.delete_namespace(namespace_hash).await.unwrap();
+        storage.delete_namespace("test").await.unwrap();
         
         // Try to access the deleted namespace - should fail
-        let result = storage.namespace(namespace_hash).await;
+        let result = storage.namespace("test").await;
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("does not exist"));
     }
@@ -576,14 +569,14 @@ mod tests {
         let storage = create_test_storage();
         storage.initialize().await.unwrap();
         
-        let namespace_hash = storage.create_namespace("test", None).await.unwrap();
-        let namespace = storage.namespace(namespace_hash).await.unwrap();
+        storage.create_namespace("test", None).await.unwrap();
+        let namespace = storage.namespace("test").await.unwrap();
         
         // Add some data
         namespace.set("key1".to_string(), b"value1".to_vec()).await.unwrap();
         namespace.set("key2".to_string(), b"value2".to_vec()).await.unwrap();
         
-        let stats = storage.get_namespace_stats(namespace_hash).await.unwrap().unwrap();
+        let stats = storage.get_namespace_stats("test").await.unwrap().unwrap();
         assert_eq!(stats.name, "test");
         assert_eq!(stats.key_count, 2);
         assert_eq!(stats.total_size, 12);
@@ -595,12 +588,12 @@ mod tests {
         storage.initialize().await.unwrap();
         
         // Create multiple namespaces with data
-        let ns1_hash = storage.create_namespace("ns1", None).await.unwrap();
-        let ns1 = storage.namespace(ns1_hash).await.unwrap();
+        storage.create_namespace("ns1", None).await.unwrap();
+        let ns1 = storage.namespace("ns1").await.unwrap();
         ns1.set("key1".to_string(), b"value1".to_vec()).await.unwrap();
         
-        let ns2_hash = storage.create_namespace("ns2", None).await.unwrap();
-        let ns2 = storage.namespace(ns2_hash).await.unwrap();
+        storage.create_namespace("ns2", None).await.unwrap();
+        let ns2 = storage.namespace("ns2").await.unwrap();
         ns2.set("key1".to_string(), b"value1".to_vec()).await.unwrap();
         ns2.set("key2".to_string(), b"value2".to_vec()).await.unwrap();
         
@@ -638,15 +631,15 @@ mod tests {
         
         assert_eq!(storage.get_total_key_count().await.unwrap(), 0);
         
-        let ns1_hash = storage.create_namespace("ns1", None).await.unwrap();
-        let ns1 = storage.namespace(ns1_hash).await.unwrap();
+        storage.create_namespace("ns1", None).await.unwrap();
+        let ns1 = storage.namespace("ns1").await.unwrap();
         ns1.set("key1".to_string(), b"value1".to_vec()).await.unwrap();
         ns1.set("key2".to_string(), b"value2".to_vec()).await.unwrap();
         
         assert_eq!(storage.get_total_key_count().await.unwrap(), 2);
         
-        let ns2_hash = storage.create_namespace("ns2", None).await.unwrap();
-        let ns2 = storage.namespace(ns2_hash).await.unwrap();
+        storage.create_namespace("ns2", None).await.unwrap();
+        let ns2 = storage.namespace("ns2").await.unwrap();
         ns2.set("key1".to_string(), b"value1".to_vec()).await.unwrap();
         
         assert_eq!(storage.get_total_key_count().await.unwrap(), 3);
@@ -692,8 +685,8 @@ mod tests {
         storage.initialize().await.unwrap();
         
         // Add some data
-        let ns_hash = storage.create_namespace("test", None).await.unwrap();
-        let namespace = storage.namespace(ns_hash).await.unwrap();
+        storage.create_namespace("test", None).await.unwrap();
+        let namespace = storage.namespace("test").await.unwrap();
         namespace.set("key1".to_string(), b"value1".to_vec()).await.unwrap();
         namespace.set("key2".to_string(), b"value2".to_vec()).await.unwrap();
         
@@ -717,7 +710,7 @@ mod tests {
         assert_eq!(namespaces.len(), 1);
         assert!(namespaces.contains(&"test".to_string()));
         
-        let loaded_ns = loaded_storage.namespace(ns_hash).await.unwrap();
+        let loaded_ns = loaded_storage.namespace("test").await.unwrap();
         assert_eq!(loaded_ns.get("key1").await, Some(b"value1".to_vec()));
         assert_eq!(loaded_ns.get("key2").await, Some(b"value2".to_vec()));
     }
@@ -737,26 +730,14 @@ mod tests {
         assert!(result.is_ok());
     }
 
-    #[tokio::test]
-    async fn test_hash_namespace_name() {
-        let storage = create_test_storage();
-        
-        let hash1 = storage.hash_namespace_name("test");
-        let hash2 = storage.hash_namespace_name("test");
-        let hash3 = storage.hash_namespace_name("different");
-        
-        assert_eq!(hash1, hash2); // Same input should produce same hash
-        assert_ne!(hash1, hash3); // Different input should produce different hash
-        assert_eq!(hash1.len(), 32); // Should be 32 bytes
-    }
 
     #[tokio::test]
     async fn test_update_namespace_config() {
         let storage = create_test_storage();
         storage.initialize().await.unwrap();
         
-        let namespace_hash = storage.create_namespace("test", None).await.unwrap();
-        let namespace = storage.namespace(namespace_hash).await.unwrap();
+        let namespace_id = storage.create_namespace("test", None).await.unwrap();
+        let namespace = storage.namespace("test").await.unwrap();
         
         // Add some data
         namespace.set("key1".to_string(), b"value1".to_vec()).await.unwrap();
@@ -767,7 +748,7 @@ mod tests {
             max_keys: Some(5),
             max_value_size: Some(50),
         };
-        storage.update_namespace_config(namespace_hash, new_config).await.unwrap();
+        storage.update_namespace_config("test", new_config).await.unwrap();
         
         // Verify the config was updated
         let updated_config = namespace.get_config().await;
@@ -780,8 +761,8 @@ mod tests {
         let storage = create_test_storage();
         storage.initialize().await.unwrap();
         
-        let namespace_hash = storage.create_namespace("test", None).await.unwrap();
-        let namespace = storage.namespace(namespace_hash).await.unwrap();
+        storage.create_namespace("test", None).await.unwrap();
+        let namespace = storage.namespace("test").await.unwrap();
         
         // Add some data
         namespace.set("key1".to_string(), b"value1".to_vec()).await.unwrap();
@@ -792,7 +773,7 @@ mod tests {
             max_keys: Some(1), // Only 1 key allowed, but we have 2
             max_value_size: Some(50),
         };
-        let result = storage.update_namespace_config(namespace_hash, invalid_config).await;
+        let result = storage.update_namespace_config("test", invalid_config).await;
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("Cannot set max_keys to 1 when namespace already has 2 keys"));
     }
