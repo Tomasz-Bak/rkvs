@@ -1,6 +1,6 @@
 //! Handles the serialization and file I/O for saving and loading storage state.
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::fs::{self, File};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -8,11 +8,19 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use crate::namespace::Namespace;
 use crate::types::NamespaceSnapshot;
 use crate::{Result, RkvsError};
+use crate::manager::StorageManager;
+use crate::types::StorageConfig;
 
 /// Provides file-based persistence for the storage manager.
 #[derive(Debug)]
 pub struct FilePersistence {
     base_path: PathBuf,
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+struct FullStorageSnapshot {
+    namespaces: HashMap<String, NamespaceSnapshot>,
+    config: StorageConfig,
 }
 
 impl FilePersistence {
@@ -26,13 +34,17 @@ impl FilePersistence {
     }
 
     /// Saves a snapshot of all namespaces to a file.
-    pub async fn save_all(&self, namespaces: &HashMap<String, Arc<Namespace>>, filename: &str) -> Result<()> {
+    pub async fn save_all(&self, manager: &StorageManager, filename: &str) -> Result<()> {
+        let namespaces_guard = manager.namespaces.read().await;
+        let manager_config = manager.get_config().await;
+
         let mut snapshots = HashMap::new();
-        for (name, ns) in namespaces.iter() {
+        for (name, ns) in namespaces_guard.iter() {
             snapshots.insert(name.clone(), ns.create_snapshot().await);
         }
 
-        let bytes = bincode::serialize(&snapshots)?;
+        let full_snapshot = FullStorageSnapshot { namespaces: snapshots, config: manager_config};
+        let bytes = bincode::serialize(&full_snapshot)?;
         let path = self.base_path.join(filename);
         let mut file = File::create(&path).await?;
         file.write_all(&bytes).await?;
@@ -40,24 +52,24 @@ impl FilePersistence {
     }
 
     /// Loads a full storage snapshot from a file.
-    pub async fn load_all(&self, filename: &str) -> Result<HashMap<String, Arc<Namespace>>> {
+    pub async fn load_all(&self, filename: &str) -> Result<(HashMap<String, Arc<Namespace>>, StorageConfig)> {
         let path = self.base_path.join(filename);
         if !path.exists() {
             return Err(RkvsError::SnapshotNotFound(path.display().to_string()));
         }
-
+    
         let mut file = File::open(&path).await?;
         let mut buffer = Vec::new();
         file.read_to_end(&mut buffer).await?;
-
-        let snapshots: HashMap<String, NamespaceSnapshot> = bincode::deserialize(&buffer)?;
+    
+        let full_snapshot: FullStorageSnapshot = bincode::deserialize(&buffer)?;
         let mut namespaces = HashMap::new();
-        for (_, snapshot) in snapshots {
+        for (_, snapshot) in full_snapshot.namespaces {
             let ns = Namespace::from_snapshot(snapshot);
             namespaces.insert(ns.get_metadata().await.name, Arc::new(ns));
         }
-
-        Ok(namespaces)
+    
+        Ok((namespaces, full_snapshot.config)) // StorageConfig loading is handled by the manager
     }
 
     /// Saves a single namespace snapshot to a file.
@@ -70,8 +82,9 @@ impl FilePersistence {
     }
 
     /// Loads a single namespace snapshot from a file.
-    pub async fn load_snapshot(&self, path: &Path) -> Result<NamespaceSnapshot> {
-        let mut file = File::open(path).await?;
+    pub async fn load_snapshot(&self, filename: &str) -> Result<NamespaceSnapshot> {
+        let path = self.base_path.join(filename);
+        let mut file = File::open(&path).await?;
         let mut buffer = Vec::new();
         file.read_to_end(&mut buffer).await?;
         let snapshot: NamespaceSnapshot = bincode::deserialize(&buffer)?;

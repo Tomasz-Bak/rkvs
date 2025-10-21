@@ -13,14 +13,14 @@ pub struct NamespaceStats {
 }
 
 /// Configuration for automatic snapshotting of the entire storage manager.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ManagerAutosaveConfig {
     pub interval: Duration,
     pub filename: String,
 }
 
 /// Configuration for automatic snapshotting of a single namespace.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct NamespaceAutosaveConfig {
     pub namespace_name: String,
     pub interval: Duration,
@@ -28,7 +28,7 @@ pub struct NamespaceAutosaveConfig {
 }
 
 /// Storage configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct StorageConfig {
     pub max_namespaces: Option<usize>,
     pub manager_autosave: Option<ManagerAutosaveConfig>,

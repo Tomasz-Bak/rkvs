@@ -47,8 +47,8 @@ use super::persistence::FilePersistence;
 /// # }
 /// ```
 pub struct StorageManager {
-    namespaces: Arc<RwLock<HashMap<String, Arc<Namespace>>>>,
-    config: StorageConfig,
+    pub namespaces: Arc<RwLock<HashMap<String, Arc<Namespace>>>>,
+    config: RwLock<StorageConfig>,
     persistence: Option<FilePersistence>,
     initialized: Arc<AtomicBool>,
     autosave_tasks: Arc<RwLock<HashMap<String, tokio::task::JoinHandle<()>>>>,
@@ -167,7 +167,7 @@ impl StorageManagerBuilder {
         };
         let manager = StorageManager::new(config, persistence);
         let arc_manager = Arc::new(manager);
-        arc_manager.spawn_autosave_tasks();
+        arc_manager.spawn_autosave_tasks().await;
         Ok(arc_manager)
     }
 }
@@ -183,7 +183,7 @@ impl StorageManager {
     fn new(config: StorageConfig, persistence: Option<FilePersistence>) -> Self {
         Self {
             namespaces: Arc::new(RwLock::new(HashMap::new())),
-            config,
+            config: RwLock::new(config),
             persistence,
             initialized: Arc::new(AtomicBool::new(false)),
             autosave_tasks: Arc::new(RwLock::new(HashMap::new())),
@@ -195,24 +195,24 @@ impl StorageManager {
 // MARK: - Autosave Task Management
 impl StorageManager {
     /// Spawns background tasks for autosaving based on the initial configuration.
-    fn spawn_autosave_tasks(self: &Arc<Self>) {
+    async fn spawn_autosave_tasks(self: &Arc<Self>) {
         if self.persistence.is_none() {
             return;
         }
 
         // Spawn task for full manager autosave
-        if let Some(manager_config) = &self.config.manager_autosave {
+        let config_guard = self.config.read().await;
+        if let Some(manager_config) = &config_guard.manager_autosave {
             let manager_task = Self::create_manager_autosave_task(Arc::downgrade(self), manager_config.clone());
             let handle = tokio::spawn(manager_task);
-            let mut task_guard = self.manager_autosave_task.blocking_write();
+            let mut task_guard = self.manager_autosave_task.write().await;
             *task_guard = Some(handle);
         }
 
-        // Spawn tasks for individual namespace autosaves
-        for ns_config in &self.config.namespace_autosave {
+        for ns_config in &config_guard.namespace_autosave {
             let task = Self::create_namespace_autosave_task(Arc::downgrade(self), ns_config.clone());
             let handle = tokio::spawn(task);
-            let mut tasks = self.autosave_tasks.blocking_write();
+            let mut tasks = self.autosave_tasks.write().await;
             tasks.insert(ns_config.namespace_name.clone(), handle);
         }
     }
@@ -342,8 +342,10 @@ impl StorageManager {
         
         if let (Some(persistence), Some(fname)) = (&self.persistence, filename) {
             match persistence.load_all(fname).await {
-                Ok(data) => {
-                    // Successfully loaded data from the snapshot
+                Ok((data, loaded_config)) => {
+                    let mut config = self.config.write().await;
+                    *config = loaded_config;
+                    
                     let mut namespaces = self.namespaces.write().await;
                     *namespaces = data;
                 }
@@ -393,8 +395,7 @@ impl StorageManager {
     /// ```
     pub async fn save_all(&self, filename: &str) -> Result<()> {
         if let Some(persistence) = &self.persistence {
-            let namespaces = self.namespaces.read().await;
-            persistence.save_all(&namespaces, filename).await?;
+            persistence.save_all(self, filename).await?;
         }
         Ok(())
     }
@@ -412,6 +413,96 @@ impl StorageManager {
         } else {
             Err(crate::RkvsError::Storage("Persistence is not enabled.".to_string()))
         }
+    }
+
+    /// Loads a single namespace from a snapshot file and adds it to the manager.
+    ///
+    /// This method will fail if a namespace with the same name already exists or if
+    /// the `max_namespaces` limit has been reached. It requires persistence to be enabled.
+    ///
+    /// # Arguments
+    ///
+    /// * `filename` - The name of the snapshot file to load from the persistence directory.
+    ///
+    /// # Returns
+    ///
+    /// Returns `Ok(namespace_name)` on success, or an error if it fails.
+    pub async fn load_namespace(&self, filename: &str) -> Result<String> {
+        self.ensure_initialized().await?;
+
+        let persistence = self.persistence.as_ref().ok_or_else(|| {
+            crate::RkvsError::Storage("Persistence is not enabled.".to_string())
+        })?;
+
+        // Load the snapshot data from the file
+        let snapshot = persistence.load_snapshot(filename).await?;
+        let namespace_name = snapshot.metadata.name.clone();
+
+        // Create the namespace object from the snapshot
+        let namespace = Arc::new(Namespace::from_snapshot(snapshot));
+
+        let mut namespaces = self.namespaces.write().await;
+        let config_guard = self.config.read().await;
+
+        // Check if the namespace already exists
+        if namespaces.contains_key(&namespace_name) {
+            return Err(crate::RkvsError::Storage(format!("Namespace '{}' already exists", namespace_name)));
+        }
+
+        // Check if we've reached the max namespaces limit
+        if let Some(max) = config_guard.max_namespaces {
+            if namespaces.len() >= max {
+                return Err(crate::RkvsError::Storage(format!("Maximum number of namespaces ({}) reached", max)));
+            }
+        }
+
+        namespaces.insert(namespace_name.clone(), namespace);
+        Ok(namespace_name)
+    }
+
+    /// Loads a single namespace from a snapshot file and adds it to the manager with a new name.
+    ///
+    /// This allows creating multiple namespaces from the same snapshot file.
+    /// This method will fail if a namespace with the `new_name` already exists or if
+    /// the `max_namespaces` limit has been reached. It requires persistence to be enabled.
+    ///
+    /// # Arguments
+    ///
+    /// * `filename` - The name of the snapshot file to load from the persistence directory.
+    /// * `new_name` - The new name for the loaded namespace.
+    ///
+    /// # Returns
+    ///
+    /// Returns `Ok(new_name)` on success, or an error if it fails.
+    pub async fn load_namespace_with_name(&self, filename: &str, new_name: &str) -> Result<String> {
+        self.ensure_initialized().await?;
+
+        let persistence = self.persistence.as_ref().ok_or_else(|| {
+            crate::RkvsError::Storage("Persistence is not enabled.".to_string())
+        })?;
+
+        // Load the snapshot data from the file and update its name
+        let mut snapshot = persistence.load_snapshot(filename).await?;
+        snapshot.metadata.name = new_name.to_string();
+
+        // Create the namespace object from the modified snapshot
+        let namespace = Arc::new(Namespace::from_snapshot(snapshot));
+
+        let mut namespaces = self.namespaces.write().await;
+        let config_guard = self.config.read().await;
+
+        if namespaces.contains_key(new_name) {
+            return Err(crate::RkvsError::Storage(format!("Namespace '{}' already exists", new_name)));
+        }
+
+        if let Some(max) = config_guard.max_namespaces {
+            if namespaces.len() >= max {
+                return Err(crate::RkvsError::Storage(format!("Maximum number of namespaces ({}) reached", max)));
+            }
+        }
+
+        namespaces.insert(new_name.to_string(), namespace);
+        Ok(new_name.to_string())
     }
 }
 
@@ -461,7 +552,8 @@ impl StorageManager {
             return Err(crate::RkvsError::Storage(format!("Namespace '{}' already exists", name)));
         }
         
-        if let Some(max_namespaces) = self.config.max_namespaces {
+        let config_guard = self.config.read().await;
+        if let Some(max_namespaces) = config_guard.max_namespaces {
             if namespaces.len() >= max_namespaces {
                 return Err(crate::RkvsError::Storage(format!(
                     "Maximum number of namespaces ({}) reached", max_namespaces
@@ -515,7 +607,7 @@ impl StorageManager {
         
         match namespaces.get(name) {
             Some(namespace) => namespace.update_config(new_config).await,
-            None => Err(crate::RkvsError::Storage(format!("Namespace with name '{}' does not exist", name))),
+            _ => Err(crate::RkvsError::Storage(format!("Namespace with name '{}' does not exist", name))),
         }
     }
 
@@ -631,13 +723,13 @@ impl StorageManager {
     }
 
     /// Gets the storage configuration.
-    pub fn get_config(&self) -> &StorageConfig {
-        &self.config
+    pub async fn get_config(&self) -> StorageConfig {
+        self.config.read().await.clone()
     }
 
     /// Updates the storage configuration. Note: This does not dynamically change running tasks.
-    pub fn update_config(&mut self, config: StorageConfig) {
-        self.config = config;
+    pub async fn update_config(&self, config: StorageConfig) {
+        *self.config.write().await = config;
     }
 
     /// Checks if persistence is enabled.
