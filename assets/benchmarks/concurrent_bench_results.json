@@ -1,0 +1,482 @@
+[
+  {
+    "scenario_name": "80-20 Read-Heavy Workload @ 8 Concurrency (1 Shard(s))",
+    "min_latency_ns": 240,
+    "avg_latency_ns": 1232,
+    "p99_latency_ns": 5207,
+    "max_latency_ns": 268583,
+    "ops_per_sec": 544315.1838626404
+  },
+  {
+    "scenario_name": "50-50 Balanced Workload @ 8 Concurrency (1 Shard(s))",
+    "min_latency_ns": 248,
+    "avg_latency_ns": 1905,
+    "p99_latency_ns": 8202,
+    "max_latency_ns": 165062,
+    "ops_per_sec": 460562.071774377
+  },
+  {
+    "scenario_name": "20-80 Write-Heavy Workload @ 8 Concurrency (1 Shard(s))",
+    "min_latency_ns": 272,
+    "avg_latency_ns": 2824,
+    "p99_latency_ns": 11212,
+    "max_latency_ns": 154938,
+    "ops_per_sec": 420863.7910768466
+  },
+  {
+    "scenario_name": "80-20 Read-Heavy Workload @ 16 Concurrency (1 Shard(s))",
+    "min_latency_ns": 269,
+    "avg_latency_ns": 1656,
+    "p99_latency_ns": 8601,
+    "max_latency_ns": 297958,
+    "ops_per_sec": 683936.6292059848
+  },
+  {
+    "scenario_name": "50-50 Balanced Workload @ 16 Concurrency (1 Shard(s))",
+    "min_latency_ns": 258,
+    "avg_latency_ns": 4052,
+    "p99_latency_ns": 16980,
+    "max_latency_ns": 149510,
+    "ops_per_sec": 548188.472419519
+  },
+  {
+    "scenario_name": "20-80 Write-Heavy Workload @ 16 Concurrency (1 Shard(s))",
+    "min_latency_ns": 279,
+    "avg_latency_ns": 5056,
+    "p99_latency_ns": 19853,
+    "max_latency_ns": 3340875,
+    "ops_per_sec": 495435.98588068754
+  },
+  {
+    "scenario_name": "80-20 Read-Heavy Workload @ 32 Concurrency (1 Shard(s))",
+    "min_latency_ns": 284,
+    "avg_latency_ns": 2367,
+    "p99_latency_ns": 14996,
+    "max_latency_ns": 339439,
+    "ops_per_sec": 843749.3857504473
+  },
+  {
+    "scenario_name": "50-50 Balanced Workload @ 32 Concurrency (1 Shard(s))",
+    "min_latency_ns": 281,
+    "avg_latency_ns": 5463,
+    "p99_latency_ns": 26127,
+    "max_latency_ns": 3383447,
+    "ops_per_sec": 640213.0575789897
+  },
+  {
+    "scenario_name": "20-80 Write-Heavy Workload @ 32 Concurrency (1 Shard(s))",
+    "min_latency_ns": 284,
+    "avg_latency_ns": 6854,
+    "p99_latency_ns": 24389,
+    "max_latency_ns": 607875,
+    "ops_per_sec": 574518.309690152
+  },
+  {
+    "scenario_name": "80-20 Read-Heavy Workload @ 64 Concurrency (1 Shard(s))",
+    "min_latency_ns": 293,
+    "avg_latency_ns": 2084,
+    "p99_latency_ns": 13167,
+    "max_latency_ns": 318932,
+    "ops_per_sec": 867865.6908004598
+  },
+  {
+    "scenario_name": "50-50 Balanced Workload @ 64 Concurrency (1 Shard(s))",
+    "min_latency_ns": 295,
+    "avg_latency_ns": 5400,
+    "p99_latency_ns": 28642,
+    "max_latency_ns": 350928,
+    "ops_per_sec": 699862.4562834171
+  },
+  {
+    "scenario_name": "20-80 Write-Heavy Workload @ 64 Concurrency (1 Shard(s))",
+    "min_latency_ns": 291,
+    "avg_latency_ns": 9380,
+    "p99_latency_ns": 31832,
+    "max_latency_ns": 830386,
+    "ops_per_sec": 605006.3802430094
+  },
+  {
+    "scenario_name": "80-20 Read-Heavy Workload @ 128 Concurrency (1 Shard(s))",
+    "min_latency_ns": 293,
+    "avg_latency_ns": 1959,
+    "p99_latency_ns": 13712,
+    "max_latency_ns": 365810,
+    "ops_per_sec": 829168.7100790185
+  },
+  {
+    "scenario_name": "50-50 Balanced Workload @ 128 Concurrency (1 Shard(s))",
+    "min_latency_ns": 290,
+    "avg_latency_ns": 3911,
+    "p99_latency_ns": 25304,
+    "max_latency_ns": 488533,
+    "ops_per_sec": 681427.7428944021
+  },
+  {
+    "scenario_name": "20-80 Write-Heavy Workload @ 128 Concurrency (1 Shard(s))",
+    "min_latency_ns": 300,
+    "avg_latency_ns": 9401,
+    "p99_latency_ns": 36184,
+    "max_latency_ns": 1233024,
+    "ops_per_sec": 605598.415992132
+  },
+  {
+    "scenario_name": "80-20 Read-Heavy Workload @ 8 Concurrency (5 Shard(s))",
+    "min_latency_ns": 285,
+    "avg_latency_ns": 1131,
+    "p99_latency_ns": 3586,
+    "max_latency_ns": 330001,
+    "ops_per_sec": 495029.47796931636
+  },
+  {
+    "scenario_name": "50-50 Balanced Workload @ 8 Concurrency (5 Shard(s))",
+    "min_latency_ns": 292,
+    "avg_latency_ns": 1278,
+    "p99_latency_ns": 4365,
+    "max_latency_ns": 133207,
+    "ops_per_sec": 488923.2896923531
+  },
+  {
+    "scenario_name": "20-80 Write-Heavy Workload @ 8 Concurrency (5 Shard(s))",
+    "min_latency_ns": 302,
+    "avg_latency_ns": 1483,
+    "p99_latency_ns": 5579,
+    "max_latency_ns": 318219,
+    "ops_per_sec": 458391.368209341
+  },
+  {
+    "scenario_name": "80-20 Read-Heavy Workload @ 16 Concurrency (5 Shard(s))",
+    "min_latency_ns": 293,
+    "avg_latency_ns": 1221,
+    "p99_latency_ns": 4443,
+    "max_latency_ns": 279429,
+    "ops_per_sec": 715972.5708238971
+  },
+  {
+    "scenario_name": "50-50 Balanced Workload @ 16 Concurrency (5 Shard(s))",
+    "min_latency_ns": 298,
+    "avg_latency_ns": 1534,
+    "p99_latency_ns": 6834,
+    "max_latency_ns": 281832,
+    "ops_per_sec": 657472.5278818944
+  },
+  {
+    "scenario_name": "20-80 Write-Heavy Workload @ 16 Concurrency (5 Shard(s))",
+    "min_latency_ns": 306,
+    "avg_latency_ns": 1786,
+    "p99_latency_ns": 8099,
+    "max_latency_ns": 946932,
+    "ops_per_sec": 521971.697711573
+  },
+  {
+    "scenario_name": "80-20 Read-Heavy Workload @ 32 Concurrency (5 Shard(s))",
+    "min_latency_ns": 322,
+    "avg_latency_ns": 1418,
+    "p99_latency_ns": 6985,
+    "max_latency_ns": 321437,
+    "ops_per_sec": 865262.2052428705
+  },
+  {
+    "scenario_name": "50-50 Balanced Workload @ 32 Concurrency (5 Shard(s))",
+    "min_latency_ns": 310,
+    "avg_latency_ns": 1724,
+    "p99_latency_ns": 8802,
+    "max_latency_ns": 329183,
+    "ops_per_sec": 683460.8071417037
+  },
+  {
+    "scenario_name": "20-80 Write-Heavy Workload @ 32 Concurrency (5 Shard(s))",
+    "min_latency_ns": 316,
+    "avg_latency_ns": 1836,
+    "p99_latency_ns": 8111,
+    "max_latency_ns": 349663,
+    "ops_per_sec": 586621.482821176
+  },
+  {
+    "scenario_name": "80-20 Read-Heavy Workload @ 64 Concurrency (5 Shard(s))",
+    "min_latency_ns": 322,
+    "avg_latency_ns": 1298,
+    "p99_latency_ns": 5328,
+    "max_latency_ns": 269928,
+    "ops_per_sec": 817810.9704817232
+  },
+  {
+    "scenario_name": "50-50 Balanced Workload @ 64 Concurrency (5 Shard(s))",
+    "min_latency_ns": 337,
+    "avg_latency_ns": 1658,
+    "p99_latency_ns": 7565,
+    "max_latency_ns": 603058,
+    "ops_per_sec": 712019.4227825209
+  },
+  {
+    "scenario_name": "20-80 Write-Heavy Workload @ 64 Concurrency (5 Shard(s))",
+    "min_latency_ns": 323,
+    "avg_latency_ns": 1795,
+    "p99_latency_ns": 7916,
+    "max_latency_ns": 326560,
+    "ops_per_sec": 606420.4875117609
+  },
+  {
+    "scenario_name": "80-20 Read-Heavy Workload @ 128 Concurrency (5 Shard(s))",
+    "min_latency_ns": 312,
+    "avg_latency_ns": 1244,
+    "p99_latency_ns": 5723,
+    "max_latency_ns": 329646,
+    "ops_per_sec": 850663.8483696999
+  },
+  {
+    "scenario_name": "50-50 Balanced Workload @ 128 Concurrency (5 Shard(s))",
+    "min_latency_ns": 336,
+    "avg_latency_ns": 1485,
+    "p99_latency_ns": 6776,
+    "max_latency_ns": 565209,
+    "ops_per_sec": 695234.2563412518
+  },
+  {
+    "scenario_name": "20-80 Write-Heavy Workload @ 128 Concurrency (5 Shard(s))",
+    "min_latency_ns": 335,
+    "avg_latency_ns": 1730,
+    "p99_latency_ns": 7616,
+    "max_latency_ns": 323790,
+    "ops_per_sec": 581113.1624478061
+  },
+  {
+    "scenario_name": "80-20 Read-Heavy Workload @ 8 Concurrency (10 Shard(s))",
+    "min_latency_ns": 299,
+    "avg_latency_ns": 1066,
+    "p99_latency_ns": 2570,
+    "max_latency_ns": 3128376,
+    "ops_per_sec": 511925.91634860355
+  },
+  {
+    "scenario_name": "50-50 Balanced Workload @ 8 Concurrency (10 Shard(s))",
+    "min_latency_ns": 310,
+    "avg_latency_ns": 1243,
+    "p99_latency_ns": 3838,
+    "max_latency_ns": 322146,
+    "ops_per_sec": 483173.1290056558
+  },
+  {
+    "scenario_name": "20-80 Write-Heavy Workload @ 8 Concurrency (10 Shard(s))",
+    "min_latency_ns": 315,
+    "avg_latency_ns": 1437,
+    "p99_latency_ns": 4965,
+    "max_latency_ns": 140973,
+    "ops_per_sec": 457942.50359351287
+  },
+  {
+    "scenario_name": "80-20 Read-Heavy Workload @ 16 Concurrency (10 Shard(s))",
+    "min_latency_ns": 300,
+    "avg_latency_ns": 1221,
+    "p99_latency_ns": 3892,
+    "max_latency_ns": 324968,
+    "ops_per_sec": 714199.6507791108
+  },
+  {
+    "scenario_name": "50-50 Balanced Workload @ 16 Concurrency (10 Shard(s))",
+    "min_latency_ns": 314,
+    "avg_latency_ns": 1497,
+    "p99_latency_ns": 6551,
+    "max_latency_ns": 766659,
+    "ops_per_sec": 662430.5951542857
+  },
+  {
+    "scenario_name": "20-80 Write-Heavy Workload @ 16 Concurrency (10 Shard(s))",
+    "min_latency_ns": 335,
+    "avg_latency_ns": 1860,
+    "p99_latency_ns": 8155,
+    "max_latency_ns": 550745,
+    "ops_per_sec": 533526.9801234762
+  },
+  {
+    "scenario_name": "80-20 Read-Heavy Workload @ 32 Concurrency (10 Shard(s))",
+    "min_latency_ns": 319,
+    "avg_latency_ns": 1350,
+    "p99_latency_ns": 6224,
+    "max_latency_ns": 496022,
+    "ops_per_sec": 877019.9554968466
+  },
+  {
+    "scenario_name": "50-50 Balanced Workload @ 32 Concurrency (10 Shard(s))",
+    "min_latency_ns": 299,
+    "avg_latency_ns": 1647,
+    "p99_latency_ns": 7615,
+    "max_latency_ns": 335342,
+    "ops_per_sec": 675839.2241100995
+  },
+  {
+    "scenario_name": "20-80 Write-Heavy Workload @ 32 Concurrency (10 Shard(s))",
+    "min_latency_ns": 330,
+    "avg_latency_ns": 1800,
+    "p99_latency_ns": 7825,
+    "max_latency_ns": 327789,
+    "ops_per_sec": 580556.0815067898
+  },
+  {
+    "scenario_name": "80-20 Read-Heavy Workload @ 64 Concurrency (10 Shard(s))",
+    "min_latency_ns": 325,
+    "avg_latency_ns": 1252,
+    "p99_latency_ns": 5039,
+    "max_latency_ns": 315307,
+    "ops_per_sec": 810347.313304236
+  },
+  {
+    "scenario_name": "50-50 Balanced Workload @ 64 Concurrency (10 Shard(s))",
+    "min_latency_ns": 345,
+    "avg_latency_ns": 1594,
+    "p99_latency_ns": 7276,
+    "max_latency_ns": 515688,
+    "ops_per_sec": 700272.7713423187
+  },
+  {
+    "scenario_name": "20-80 Write-Heavy Workload @ 64 Concurrency (10 Shard(s))",
+    "min_latency_ns": 337,
+    "avg_latency_ns": 1752,
+    "p99_latency_ns": 7534,
+    "max_latency_ns": 330793,
+    "ops_per_sec": 591097.3662856972
+  },
+  {
+    "scenario_name": "80-20 Read-Heavy Workload @ 128 Concurrency (10 Shard(s))",
+    "min_latency_ns": 334,
+    "avg_latency_ns": 1246,
+    "p99_latency_ns": 4946,
+    "max_latency_ns": 795517,
+    "ops_per_sec": 836638.3858479141
+  },
+  {
+    "scenario_name": "50-50 Balanced Workload @ 128 Concurrency (10 Shard(s))",
+    "min_latency_ns": 309,
+    "avg_latency_ns": 1480,
+    "p99_latency_ns": 6798,
+    "max_latency_ns": 3307161,
+    "ops_per_sec": 679707.3144198055
+  },
+  {
+    "scenario_name": "20-80 Write-Heavy Workload @ 128 Concurrency (10 Shard(s))",
+    "min_latency_ns": 345,
+    "avg_latency_ns": 1754,
+    "p99_latency_ns": 7462,
+    "max_latency_ns": 498427,
+    "ops_per_sec": 580866.0223815681
+  },
+  {
+    "scenario_name": "80-20 Read-Heavy Workload @ 8 Concurrency (15 Shard(s))",
+    "min_latency_ns": 294,
+    "avg_latency_ns": 1104,
+    "p99_latency_ns": 2366,
+    "max_latency_ns": 3029004,
+    "ops_per_sec": 500255.4411837604
+  },
+  {
+    "scenario_name": "50-50 Balanced Workload @ 8 Concurrency (15 Shard(s))",
+    "min_latency_ns": 311,
+    "avg_latency_ns": 1248,
+    "p99_latency_ns": 3527,
+    "max_latency_ns": 145285,
+    "ops_per_sec": 484032.85252946394
+  },
+  {
+    "scenario_name": "20-80 Write-Heavy Workload @ 8 Concurrency (15 Shard(s))",
+    "min_latency_ns": 319,
+    "avg_latency_ns": 1445,
+    "p99_latency_ns": 4875,
+    "max_latency_ns": 316935,
+    "ops_per_sec": 458617.0419262379
+  },
+  {
+    "scenario_name": "80-20 Read-Heavy Workload @ 16 Concurrency (15 Shard(s))",
+    "min_latency_ns": 326,
+    "avg_latency_ns": 1202,
+    "p99_latency_ns": 3696,
+    "max_latency_ns": 313106,
+    "ops_per_sec": 720275.1826316968
+  },
+  {
+    "scenario_name": "50-50 Balanced Workload @ 16 Concurrency (15 Shard(s))",
+    "min_latency_ns": 314,
+    "avg_latency_ns": 1489,
+    "p99_latency_ns": 6548,
+    "max_latency_ns": 987284,
+    "ops_per_sec": 659454.5885995418
+  },
+  {
+    "scenario_name": "20-80 Write-Heavy Workload @ 16 Concurrency (15 Shard(s))",
+    "min_latency_ns": 348,
+    "avg_latency_ns": 1878,
+    "p99_latency_ns": 8245,
+    "max_latency_ns": 325183,
+    "ops_per_sec": 530211.2566551956
+  },
+  {
+    "scenario_name": "80-20 Read-Heavy Workload @ 32 Concurrency (15 Shard(s))",
+    "min_latency_ns": 334,
+    "avg_latency_ns": 1341,
+    "p99_latency_ns": 5995,
+    "max_latency_ns": 326715,
+    "ops_per_sec": 877608.1174239254
+  },
+  {
+    "scenario_name": "50-50 Balanced Workload @ 32 Concurrency (15 Shard(s))",
+    "min_latency_ns": 332,
+    "avg_latency_ns": 1670,
+    "p99_latency_ns": 7905,
+    "max_latency_ns": 329614,
+    "ops_per_sec": 684596.9611948521
+  },
+  {
+    "scenario_name": "20-80 Write-Heavy Workload @ 32 Concurrency (15 Shard(s))",
+    "min_latency_ns": 322,
+    "avg_latency_ns": 1831,
+    "p99_latency_ns": 7831,
+    "max_latency_ns": 535402,
+    "ops_per_sec": 580613.6542266958
+  },
+  {
+    "scenario_name": "80-20 Read-Heavy Workload @ 64 Concurrency (15 Shard(s))",
+    "min_latency_ns": 284,
+    "avg_latency_ns": 1308,
+    "p99_latency_ns": 5808,
+    "max_latency_ns": 327992,
+    "ops_per_sec": 816996.4359435714
+  },
+  {
+    "scenario_name": "50-50 Balanced Workload @ 64 Concurrency (15 Shard(s))",
+    "min_latency_ns": 341,
+    "avg_latency_ns": 1598,
+    "p99_latency_ns": 7263,
+    "max_latency_ns": 313590,
+    "ops_per_sec": 703494.2553189546
+  },
+  {
+    "scenario_name": "20-80 Write-Heavy Workload @ 64 Concurrency (15 Shard(s))",
+    "min_latency_ns": 345,
+    "avg_latency_ns": 1764,
+    "p99_latency_ns": 7493,
+    "max_latency_ns": 113597,
+    "ops_per_sec": 595083.0648356333
+  },
+  {
+    "scenario_name": "80-20 Read-Heavy Workload @ 128 Concurrency (15 Shard(s))",
+    "min_latency_ns": 343,
+    "avg_latency_ns": 1259,
+    "p99_latency_ns": 5939,
+    "max_latency_ns": 900337,
+    "ops_per_sec": 830576.9786340256
+  },
+  {
+    "scenario_name": "50-50 Balanced Workload @ 128 Concurrency (15 Shard(s))",
+    "min_latency_ns": 336,
+    "avg_latency_ns": 1502,
+    "p99_latency_ns": 6874,
+    "max_latency_ns": 324958,
+    "ops_per_sec": 685174.5877395599
+  },
+  {
+    "scenario_name": "20-80 Write-Heavy Workload @ 128 Concurrency (15 Shard(s))",
+    "min_latency_ns": 326,
+    "avg_latency_ns": 1707,
+    "p99_latency_ns": 7261,
+    "max_latency_ns": 323826,
+    "ops_per_sec": 589728.5595404659
+  }
+]

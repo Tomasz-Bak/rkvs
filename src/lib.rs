@@ -5,42 +5,44 @@
 //!
 //! # Features
 //!
-//! - **High Performance**: Optimized for speed with async operations and efficient data structures
-//! - **Namespace Support**: Organize data into isolated namespaces with individual configurations
-//! - **Atomic Operations**: Batch operations with all-or-nothing semantics
-//! - **Persistence**: Optional file-based persistence with automatic serialization
-//! - **Thread-Safe**: Built on Tokio's async primitives for concurrent access
-//! - **Rich Metadata**: Track key counts, sizes, and namespace statistics
-//! - **Configurable Limits**: Set per-namespace limits for keys and value sizes
-//! - **Atomic Consume**: Get and delete operations in a single atomic step
+//! - **High Performance**: Optimized for speed with async operations and efficient data structures.
+//! - **Namespace Support**: Organize data into isolated namespaces with individual configurations.
+//! - **Automatic Sharding**: Keys are automatically distributed across multiple shards for improved concurrency.
+//! - **Optional Auto-Scaling**: Namespaces can automatically increase their shard count as data grows.
+//! - **Atomic Batch Operations**: Perform `set`, `get`, and `delete` on multiple items with all-or-nothing semantics.
+//! - **Persistence**: Optional file-based persistence with automatic serialization.
+//! - **Thread-Safe**: Built on Tokio's async primitives for concurrent access.
+//! - **Convenience Methods**: Includes atomic operations like `consume` (get and delete) and `update` (fail if key doesn't exist).
 //!
 //! # Quick Start
 //!
 //! ```rust
 //! use rkvs::{StorageManager, NamespaceConfig, Result};
+//! use std::env::temp_dir;
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<()> {
-//!     // Create a storage manager
+//!     // Use a temporary directory. The persistence layer will create it if it doesn't exist.
+//!     let temp_path = temp_dir().join("rkvs_docs_lib_main");
+//!
 //!     let storage = StorageManager::builder()
-//!         .with_persistence("/tmp/rkvs_data".into())
-//!         .build();
+//!         .with_persistence(temp_path)
+//!         .build().await?;
 //!     
 //!     // Initialize the storage
-//!     storage.initialize().await?;
+//!     storage.initialize(None).await?;
 //!     
 //!     // Create a namespace with configuration
-//!     let config = NamespaceConfig {
-//!         max_keys: Some(1000),
-//!         max_value_size: Some(1024 * 1024), // 1MB
-//!     };
-//!     let namespace_id = storage.create_namespace("my_app", Some(config)).await?;
+//!     let mut config = NamespaceConfig::default();
+//!     config.set_max_keys(1000);
+//!     config.set_max_value_size(1024 * 1024); // 1MB
+//!     storage.create_namespace("my_app", Some(config)).await?;
 //!     
 //!     // Get the namespace handle
-//!     let namespace = storage.namespace(&namespace_id).await?;
+//!     let namespace = storage.namespace("my_app").await?;
 //!     
 //!     // Store data
-//!     namespace.set("user:123".to_string(), b"John Doe".to_vec()).await?;
+//!     namespace.set("user:123", b"John Doe".to_vec()).await?;
 //!     
 //!     // Retrieve data
 //!     if let Some(data) = namespace.get("user:123").await {
@@ -54,20 +56,26 @@
 //! # Batch Operations
 //!
 //! RKVS supports efficient batch operations for processing multiple key-value pairs:
-//!
 //! ```rust
-//! use rkvs::{namespace::Namespace, BatchResult, Result};
+//! use rkvs::{StorageManager, Result, BatchMode};
 //!
-//! async fn batch_example(namespace: &Namespace) -> Result<()> {
+//! # async fn run() -> Result<()> {
+//! #   let storage = StorageManager::builder().build().await?;
+//! #   storage.initialize(None).await?;
+//! #   storage.create_namespace("my_app", None).await?;
+//! #   let namespace = storage.namespace("my_app").await?;
+//!
 //!     // Batch set multiple items
 //!     let items = vec![
 //!         ("key1".to_string(), b"value1".to_vec()),
 //!         ("key2".to_string(), b"value2".to_vec()),
 //!         ("key3".to_string(), b"value3".to_vec()),
 //!     ];
-//!     
-//!     let result = namespace.set_multiple(items).await;
-//!     if result.is_success() {
+//!
+//!     let result = namespace.set_multiple(items, BatchMode::BestEffort).await;
+//!
+//!     // Check for errors by inspecting the `errors` field.
+//!     if result.errors.is_none() {
 //!         println!("Set {} items successfully", result.total_processed);
 //!     }
 //!     
@@ -75,6 +83,8 @@
 //! }
 //! ```
 
+
+pub mod data_table;
 pub mod error;
 pub mod types;
 pub mod namespace;
@@ -84,5 +94,6 @@ pub mod persistence;
 // Re-export commonly used types
 pub use error::{RkvsError, Result};
 pub use types::*;
+pub use namespace::*;
 pub use manager::*;
 pub use persistence::*;

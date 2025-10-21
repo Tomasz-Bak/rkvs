@@ -1,0 +1,1442 @@
+[
+  {
+    "scenario_name": "Concurrent Batch Set (Size 50) (AllOrNothing) @ 8 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 856,
+    "avg_latency_per_op_ns": 42829
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 50) (AllOrNothing) @ 8 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 551,
+    "avg_latency_per_op_ns": 27593
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 50) (AllOrNothing) @ 8 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 1163,
+    "avg_latency_per_op_ns": 58164
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 50) (BestEffort) @ 8 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 269,
+    "avg_latency_per_op_ns": 13497
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 50) (BestEffort) @ 8 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 586,
+    "avg_latency_per_op_ns": 29329
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 50) (BestEffort) @ 8 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 1119,
+    "avg_latency_per_op_ns": 55979
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 100) (AllOrNothing) @ 8 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 451,
+    "avg_latency_per_op_ns": 45146
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 100) (AllOrNothing) @ 8 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 615,
+    "avg_latency_per_op_ns": 61522
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 100) (AllOrNothing) @ 8 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 1176,
+    "avg_latency_per_op_ns": 117669
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 100) (BestEffort) @ 8 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 267,
+    "avg_latency_per_op_ns": 26779
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 100) (BestEffort) @ 8 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 639,
+    "avg_latency_per_op_ns": 63901
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 100) (BestEffort) @ 8 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 1238,
+    "avg_latency_per_op_ns": 123809
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 200) (AllOrNothing) @ 8 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 315,
+    "avg_latency_per_op_ns": 63039
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 200) (AllOrNothing) @ 8 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 1246,
+    "avg_latency_per_op_ns": 249372
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 200) (AllOrNothing) @ 8 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 1175,
+    "avg_latency_per_op_ns": 235168
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 200) (BestEffort) @ 8 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 256,
+    "avg_latency_per_op_ns": 51297
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 200) (BestEffort) @ 8 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 596,
+    "avg_latency_per_op_ns": 119336
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 200) (BestEffort) @ 8 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 1002,
+    "avg_latency_per_op_ns": 200539
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 50) (AllOrNothing) @ 16 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 1585,
+    "avg_latency_per_op_ns": 79285
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 50) (AllOrNothing) @ 16 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 748,
+    "avg_latency_per_op_ns": 37445
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 50) (AllOrNothing) @ 16 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 2109,
+    "avg_latency_per_op_ns": 105459
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 50) (BestEffort) @ 16 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 348,
+    "avg_latency_per_op_ns": 17409
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 50) (BestEffort) @ 16 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 697,
+    "avg_latency_per_op_ns": 34886
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 50) (BestEffort) @ 16 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 1750,
+    "avg_latency_per_op_ns": 87544
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 100) (AllOrNothing) @ 16 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 812,
+    "avg_latency_per_op_ns": 81247
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 100) (AllOrNothing) @ 16 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 680,
+    "avg_latency_per_op_ns": 68084
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 100) (AllOrNothing) @ 16 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 2040,
+    "avg_latency_per_op_ns": 204057
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 100) (BestEffort) @ 16 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 261,
+    "avg_latency_per_op_ns": 26127
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 100) (BestEffort) @ 16 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 592,
+    "avg_latency_per_op_ns": 59223
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 100) (BestEffort) @ 16 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 1646,
+    "avg_latency_per_op_ns": 164610
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 200) (AllOrNothing) @ 16 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 301,
+    "avg_latency_per_op_ns": 60221
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 200) (AllOrNothing) @ 16 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 695,
+    "avg_latency_per_op_ns": 139020
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 200) (AllOrNothing) @ 16 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 1679,
+    "avg_latency_per_op_ns": 335834
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 200) (BestEffort) @ 16 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 257,
+    "avg_latency_per_op_ns": 51504
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 200) (BestEffort) @ 16 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 667,
+    "avg_latency_per_op_ns": 133536
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 200) (BestEffort) @ 16 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 1498,
+    "avg_latency_per_op_ns": 299682
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 50) (AllOrNothing) @ 32 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 2994,
+    "avg_latency_per_op_ns": 149739
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 50) (AllOrNothing) @ 32 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 843,
+    "avg_latency_per_op_ns": 42188
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 50) (AllOrNothing) @ 32 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 3913,
+    "avg_latency_per_op_ns": 195688
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 50) (BestEffort) @ 32 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 733,
+    "avg_latency_per_op_ns": 36652
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 50) (BestEffort) @ 32 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 803,
+    "avg_latency_per_op_ns": 40187
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 50) (BestEffort) @ 32 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 3755,
+    "avg_latency_per_op_ns": 187761
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 100) (AllOrNothing) @ 32 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 1922,
+    "avg_latency_per_op_ns": 192208
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 100) (AllOrNothing) @ 32 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 807,
+    "avg_latency_per_op_ns": 80756
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 100) (AllOrNothing) @ 32 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 3498,
+    "avg_latency_per_op_ns": 349848
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 100) (BestEffort) @ 32 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 299,
+    "avg_latency_per_op_ns": 29963
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 100) (BestEffort) @ 32 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 736,
+    "avg_latency_per_op_ns": 73604
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 100) (BestEffort) @ 32 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 3536,
+    "avg_latency_per_op_ns": 353675
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 200) (AllOrNothing) @ 32 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 635,
+    "avg_latency_per_op_ns": 127035
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 200) (AllOrNothing) @ 32 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 737,
+    "avg_latency_per_op_ns": 147475
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 200) (AllOrNothing) @ 32 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 2608,
+    "avg_latency_per_op_ns": 521745
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 200) (BestEffort) @ 32 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 286,
+    "avg_latency_per_op_ns": 57397
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 200) (BestEffort) @ 32 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 683,
+    "avg_latency_per_op_ns": 136753
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 200) (BestEffort) @ 32 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 2342,
+    "avg_latency_per_op_ns": 468485
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 50) (AllOrNothing) @ 64 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 4851,
+    "avg_latency_per_op_ns": 242587
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 50) (AllOrNothing) @ 64 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 794,
+    "avg_latency_per_op_ns": 39710
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 50) (AllOrNothing) @ 64 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 5959,
+    "avg_latency_per_op_ns": 297978
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 50) (BestEffort) @ 64 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 443,
+    "avg_latency_per_op_ns": 22179
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 50) (BestEffort) @ 64 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 768,
+    "avg_latency_per_op_ns": 38412
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 50) (BestEffort) @ 64 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 5544,
+    "avg_latency_per_op_ns": 277210
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 100) (AllOrNothing) @ 64 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 3243,
+    "avg_latency_per_op_ns": 324339
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 100) (AllOrNothing) @ 64 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 889,
+    "avg_latency_per_op_ns": 88946
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 100) (AllOrNothing) @ 64 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 5984,
+    "avg_latency_per_op_ns": 598457
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 100) (BestEffort) @ 64 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 371,
+    "avg_latency_per_op_ns": 37162
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 100) (BestEffort) @ 64 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 751,
+    "avg_latency_per_op_ns": 75148
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 100) (BestEffort) @ 64 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 5509,
+    "avg_latency_per_op_ns": 550910
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 200) (AllOrNothing) @ 64 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 566,
+    "avg_latency_per_op_ns": 113319
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 200) (AllOrNothing) @ 64 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 819,
+    "avg_latency_per_op_ns": 163886
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 200) (AllOrNothing) @ 64 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 5251,
+    "avg_latency_per_op_ns": 1050263
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 200) (BestEffort) @ 64 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 291,
+    "avg_latency_per_op_ns": 58343
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 200) (BestEffort) @ 64 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 709,
+    "avg_latency_per_op_ns": 141828
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 200) (BestEffort) @ 64 Concurrency (1 Shard(s))",
+    "avg_latency_per_item_ns": 4276,
+    "avg_latency_per_op_ns": 855254
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 50) (AllOrNothing) @ 8 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 1657,
+    "avg_latency_per_op_ns": 82879
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 50) (AllOrNothing) @ 8 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 928,
+    "avg_latency_per_op_ns": 46430
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 50) (AllOrNothing) @ 8 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 1929,
+    "avg_latency_per_op_ns": 96450
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 50) (BestEffort) @ 8 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 583,
+    "avg_latency_per_op_ns": 29175
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 50) (BestEffort) @ 8 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 747,
+    "avg_latency_per_op_ns": 37389
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 50) (BestEffort) @ 8 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 1450,
+    "avg_latency_per_op_ns": 72506
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 100) (AllOrNothing) @ 8 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 1517,
+    "avg_latency_per_op_ns": 151717
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 100) (AllOrNothing) @ 8 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 799,
+    "avg_latency_per_op_ns": 79993
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 100) (AllOrNothing) @ 8 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 1778,
+    "avg_latency_per_op_ns": 177838
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 100) (BestEffort) @ 8 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 521,
+    "avg_latency_per_op_ns": 52118
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 100) (BestEffort) @ 8 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 702,
+    "avg_latency_per_op_ns": 70258
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 100) (BestEffort) @ 8 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 1270,
+    "avg_latency_per_op_ns": 127013
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 200) (AllOrNothing) @ 8 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 929,
+    "avg_latency_per_op_ns": 185823
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 200) (AllOrNothing) @ 8 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 801,
+    "avg_latency_per_op_ns": 160256
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 200) (AllOrNothing) @ 8 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 1557,
+    "avg_latency_per_op_ns": 311430
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 200) (BestEffort) @ 8 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 362,
+    "avg_latency_per_op_ns": 72595
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 200) (BestEffort) @ 8 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 773,
+    "avg_latency_per_op_ns": 154781
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 200) (BestEffort) @ 8 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 986,
+    "avg_latency_per_op_ns": 197259
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 50) (AllOrNothing) @ 16 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 2471,
+    "avg_latency_per_op_ns": 123587
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 50) (AllOrNothing) @ 16 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 995,
+    "avg_latency_per_op_ns": 49752
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 50) (AllOrNothing) @ 16 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 2693,
+    "avg_latency_per_op_ns": 134665
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 50) (BestEffort) @ 16 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 487,
+    "avg_latency_per_op_ns": 24360
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 50) (BestEffort) @ 16 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 769,
+    "avg_latency_per_op_ns": 38496
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 50) (BestEffort) @ 16 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 1882,
+    "avg_latency_per_op_ns": 94124
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 100) (AllOrNothing) @ 16 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 1914,
+    "avg_latency_per_op_ns": 191401
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 100) (AllOrNothing) @ 16 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 904,
+    "avg_latency_per_op_ns": 90423
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 100) (AllOrNothing) @ 16 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 2538,
+    "avg_latency_per_op_ns": 253865
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 100) (BestEffort) @ 16 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 525,
+    "avg_latency_per_op_ns": 52595
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 100) (BestEffort) @ 16 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 793,
+    "avg_latency_per_op_ns": 79319
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 100) (BestEffort) @ 16 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 1507,
+    "avg_latency_per_op_ns": 150736
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 200) (AllOrNothing) @ 16 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 1543,
+    "avg_latency_per_op_ns": 308669
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 200) (AllOrNothing) @ 16 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 841,
+    "avg_latency_per_op_ns": 168242
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 200) (AllOrNothing) @ 16 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 2502,
+    "avg_latency_per_op_ns": 500577
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 200) (BestEffort) @ 16 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 349,
+    "avg_latency_per_op_ns": 69830
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 200) (BestEffort) @ 16 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 737,
+    "avg_latency_per_op_ns": 147408
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 200) (BestEffort) @ 16 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 1339,
+    "avg_latency_per_op_ns": 267838
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 50) (AllOrNothing) @ 32 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 4849,
+    "avg_latency_per_op_ns": 242468
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 50) (AllOrNothing) @ 32 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 1166,
+    "avg_latency_per_op_ns": 58337
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 50) (AllOrNothing) @ 32 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 6024,
+    "avg_latency_per_op_ns": 301236
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 50) (BestEffort) @ 32 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 778,
+    "avg_latency_per_op_ns": 38911
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 50) (BestEffort) @ 32 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 894,
+    "avg_latency_per_op_ns": 44729
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 50) (BestEffort) @ 32 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 3100,
+    "avg_latency_per_op_ns": 155026
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 100) (AllOrNothing) @ 32 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 2690,
+    "avg_latency_per_op_ns": 269031
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 100) (AllOrNothing) @ 32 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 916,
+    "avg_latency_per_op_ns": 91642
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 100) (AllOrNothing) @ 32 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 4603,
+    "avg_latency_per_op_ns": 460306
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 100) (BestEffort) @ 32 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 579,
+    "avg_latency_per_op_ns": 57904
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 100) (BestEffort) @ 32 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 835,
+    "avg_latency_per_op_ns": 83547
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 100) (BestEffort) @ 32 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 2280,
+    "avg_latency_per_op_ns": 228050
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 200) (AllOrNothing) @ 32 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 2664,
+    "avg_latency_per_op_ns": 532871
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 200) (AllOrNothing) @ 32 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 764,
+    "avg_latency_per_op_ns": 152890
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 200) (AllOrNothing) @ 32 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 4445,
+    "avg_latency_per_op_ns": 889045
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 200) (BestEffort) @ 32 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 375,
+    "avg_latency_per_op_ns": 75155
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 200) (BestEffort) @ 32 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 801,
+    "avg_latency_per_op_ns": 160231
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 200) (BestEffort) @ 32 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 1839,
+    "avg_latency_per_op_ns": 367894
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 50) (AllOrNothing) @ 64 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 8941,
+    "avg_latency_per_op_ns": 447063
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 50) (AllOrNothing) @ 64 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 1111,
+    "avg_latency_per_op_ns": 55571
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 50) (AllOrNothing) @ 64 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 12613,
+    "avg_latency_per_op_ns": 630668
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 50) (BestEffort) @ 64 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 892,
+    "avg_latency_per_op_ns": 44636
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 50) (BestEffort) @ 64 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 893,
+    "avg_latency_per_op_ns": 44693
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 50) (BestEffort) @ 64 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 4295,
+    "avg_latency_per_op_ns": 214773
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 100) (AllOrNothing) @ 64 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 5803,
+    "avg_latency_per_op_ns": 580326
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 100) (AllOrNothing) @ 64 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 1062,
+    "avg_latency_per_op_ns": 106228
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 100) (AllOrNothing) @ 64 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 7632,
+    "avg_latency_per_op_ns": 763255
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 100) (BestEffort) @ 64 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 648,
+    "avg_latency_per_op_ns": 64891
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 100) (BestEffort) @ 64 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 719,
+    "avg_latency_per_op_ns": 71953
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 100) (BestEffort) @ 64 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 2663,
+    "avg_latency_per_op_ns": 266365
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 200) (AllOrNothing) @ 64 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 3985,
+    "avg_latency_per_op_ns": 797138
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 200) (AllOrNothing) @ 64 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 922,
+    "avg_latency_per_op_ns": 184416
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 200) (AllOrNothing) @ 64 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 7608,
+    "avg_latency_per_op_ns": 1521706
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 200) (BestEffort) @ 64 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 378,
+    "avg_latency_per_op_ns": 75730
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 200) (BestEffort) @ 64 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 801,
+    "avg_latency_per_op_ns": 160252
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 200) (BestEffort) @ 64 Concurrency (5 Shard(s))",
+    "avg_latency_per_item_ns": 2085,
+    "avg_latency_per_op_ns": 417142
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 50) (AllOrNothing) @ 8 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 1367,
+    "avg_latency_per_op_ns": 68395
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 50) (AllOrNothing) @ 8 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 980,
+    "avg_latency_per_op_ns": 49025
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 50) (AllOrNothing) @ 8 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 2257,
+    "avg_latency_per_op_ns": 112874
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 50) (BestEffort) @ 8 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 695,
+    "avg_latency_per_op_ns": 34793
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 50) (BestEffort) @ 8 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 760,
+    "avg_latency_per_op_ns": 38004
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 50) (BestEffort) @ 8 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 1558,
+    "avg_latency_per_op_ns": 77944
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 100) (AllOrNothing) @ 8 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 1179,
+    "avg_latency_per_op_ns": 117983
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 100) (AllOrNothing) @ 8 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 881,
+    "avg_latency_per_op_ns": 88176
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 100) (AllOrNothing) @ 8 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 1991,
+    "avg_latency_per_op_ns": 199139
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 100) (BestEffort) @ 8 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 672,
+    "avg_latency_per_op_ns": 67268
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 100) (BestEffort) @ 8 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 717,
+    "avg_latency_per_op_ns": 71712
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 100) (BestEffort) @ 8 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 1190,
+    "avg_latency_per_op_ns": 119056
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 200) (AllOrNothing) @ 8 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 1039,
+    "avg_latency_per_op_ns": 207819
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 200) (AllOrNothing) @ 8 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 754,
+    "avg_latency_per_op_ns": 150923
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 200) (AllOrNothing) @ 8 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 1766,
+    "avg_latency_per_op_ns": 353361
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 200) (BestEffort) @ 8 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 397,
+    "avg_latency_per_op_ns": 79428
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 200) (BestEffort) @ 8 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 845,
+    "avg_latency_per_op_ns": 169190
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 200) (BestEffort) @ 8 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 1091,
+    "avg_latency_per_op_ns": 218384
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 50) (AllOrNothing) @ 16 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 2471,
+    "avg_latency_per_op_ns": 123581
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 50) (AllOrNothing) @ 16 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 1179,
+    "avg_latency_per_op_ns": 58979
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 50) (AllOrNothing) @ 16 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 4080,
+    "avg_latency_per_op_ns": 204016
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 50) (BestEffort) @ 16 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 666,
+    "avg_latency_per_op_ns": 33328
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 50) (BestEffort) @ 16 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 931,
+    "avg_latency_per_op_ns": 46582
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 50) (BestEffort) @ 16 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 2224,
+    "avg_latency_per_op_ns": 111246
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 100) (AllOrNothing) @ 16 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 2189,
+    "avg_latency_per_op_ns": 218981
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 100) (AllOrNothing) @ 16 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 932,
+    "avg_latency_per_op_ns": 93276
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 100) (AllOrNothing) @ 16 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 3023,
+    "avg_latency_per_op_ns": 302370
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 100) (BestEffort) @ 16 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 540,
+    "avg_latency_per_op_ns": 54053
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 100) (BestEffort) @ 16 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 835,
+    "avg_latency_per_op_ns": 83553
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 100) (BestEffort) @ 16 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 1549,
+    "avg_latency_per_op_ns": 154909
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 200) (AllOrNothing) @ 16 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 1394,
+    "avg_latency_per_op_ns": 278978
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 200) (AllOrNothing) @ 16 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 877,
+    "avg_latency_per_op_ns": 175453
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 200) (AllOrNothing) @ 16 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 2866,
+    "avg_latency_per_op_ns": 573228
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 200) (BestEffort) @ 16 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 469,
+    "avg_latency_per_op_ns": 93974
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 200) (BestEffort) @ 16 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 776,
+    "avg_latency_per_op_ns": 155215
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 200) (BestEffort) @ 16 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 1478,
+    "avg_latency_per_op_ns": 295745
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 50) (AllOrNothing) @ 32 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 4267,
+    "avg_latency_per_op_ns": 213358
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 50) (AllOrNothing) @ 32 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 1086,
+    "avg_latency_per_op_ns": 54327
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 50) (AllOrNothing) @ 32 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 8878,
+    "avg_latency_per_op_ns": 443935
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 50) (BestEffort) @ 32 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 915,
+    "avg_latency_per_op_ns": 45770
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 50) (BestEffort) @ 32 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 806,
+    "avg_latency_per_op_ns": 40317
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 50) (BestEffort) @ 32 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 2780,
+    "avg_latency_per_op_ns": 139012
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 100) (AllOrNothing) @ 32 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 2969,
+    "avg_latency_per_op_ns": 296943
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 100) (AllOrNothing) @ 32 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 1151,
+    "avg_latency_per_op_ns": 115190
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 100) (AllOrNothing) @ 32 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 5265,
+    "avg_latency_per_op_ns": 526518
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 100) (BestEffort) @ 32 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 613,
+    "avg_latency_per_op_ns": 61310
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 100) (BestEffort) @ 32 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 832,
+    "avg_latency_per_op_ns": 83242
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 100) (BestEffort) @ 32 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 2434,
+    "avg_latency_per_op_ns": 243422
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 200) (AllOrNothing) @ 32 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 2354,
+    "avg_latency_per_op_ns": 470867
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 200) (AllOrNothing) @ 32 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 977,
+    "avg_latency_per_op_ns": 195482
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 200) (AllOrNothing) @ 32 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 4739,
+    "avg_latency_per_op_ns": 947878
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 200) (BestEffort) @ 32 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 537,
+    "avg_latency_per_op_ns": 107581
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 200) (BestEffort) @ 32 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 834,
+    "avg_latency_per_op_ns": 166990
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 200) (BestEffort) @ 32 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 1838,
+    "avg_latency_per_op_ns": 367611
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 50) (AllOrNothing) @ 64 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 9215,
+    "avg_latency_per_op_ns": 460771
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 50) (AllOrNothing) @ 64 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 1495,
+    "avg_latency_per_op_ns": 74777
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 50) (AllOrNothing) @ 64 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 14290,
+    "avg_latency_per_op_ns": 714540
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 50) (BestEffort) @ 64 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 746,
+    "avg_latency_per_op_ns": 37314
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 50) (BestEffort) @ 64 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 936,
+    "avg_latency_per_op_ns": 46808
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 50) (BestEffort) @ 64 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 4271,
+    "avg_latency_per_op_ns": 213579
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 100) (AllOrNothing) @ 64 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 7212,
+    "avg_latency_per_op_ns": 721254
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 100) (AllOrNothing) @ 64 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 990,
+    "avg_latency_per_op_ns": 99022
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 100) (AllOrNothing) @ 64 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 8876,
+    "avg_latency_per_op_ns": 887642
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 100) (BestEffort) @ 64 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 614,
+    "avg_latency_per_op_ns": 61445
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 100) (BestEffort) @ 64 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 773,
+    "avg_latency_per_op_ns": 77336
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 100) (BestEffort) @ 64 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 3031,
+    "avg_latency_per_op_ns": 303187
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 200) (AllOrNothing) @ 64 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 5096,
+    "avg_latency_per_op_ns": 1019334
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 200) (AllOrNothing) @ 64 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 964,
+    "avg_latency_per_op_ns": 192859
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 200) (AllOrNothing) @ 64 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 8984,
+    "avg_latency_per_op_ns": 1796957
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 200) (BestEffort) @ 64 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 530,
+    "avg_latency_per_op_ns": 106131
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 200) (BestEffort) @ 64 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 837,
+    "avg_latency_per_op_ns": 167430
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 200) (BestEffort) @ 64 Concurrency (10 Shard(s))",
+    "avg_latency_per_item_ns": 2250,
+    "avg_latency_per_op_ns": 450057
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 50) (AllOrNothing) @ 8 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 1912,
+    "avg_latency_per_op_ns": 95611
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 50) (AllOrNothing) @ 8 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 1136,
+    "avg_latency_per_op_ns": 56836
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 50) (AllOrNothing) @ 8 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 2494,
+    "avg_latency_per_op_ns": 124726
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 50) (BestEffort) @ 8 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 731,
+    "avg_latency_per_op_ns": 36550
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 50) (BestEffort) @ 8 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 749,
+    "avg_latency_per_op_ns": 37462
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 50) (BestEffort) @ 8 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 1632,
+    "avg_latency_per_op_ns": 81623
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 100) (AllOrNothing) @ 8 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 1487,
+    "avg_latency_per_op_ns": 148757
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 100) (AllOrNothing) @ 8 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 1011,
+    "avg_latency_per_op_ns": 101166
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 100) (AllOrNothing) @ 8 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 1906,
+    "avg_latency_per_op_ns": 190674
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 100) (BestEffort) @ 8 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 586,
+    "avg_latency_per_op_ns": 58628
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 100) (BestEffort) @ 8 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 760,
+    "avg_latency_per_op_ns": 76034
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 100) (BestEffort) @ 8 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 1382,
+    "avg_latency_per_op_ns": 138237
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 200) (AllOrNothing) @ 8 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 988,
+    "avg_latency_per_op_ns": 197795
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 200) (AllOrNothing) @ 8 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 823,
+    "avg_latency_per_op_ns": 164728
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 200) (AllOrNothing) @ 8 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 1666,
+    "avg_latency_per_op_ns": 333367
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 200) (BestEffort) @ 8 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 463,
+    "avg_latency_per_op_ns": 92663
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 200) (BestEffort) @ 8 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 779,
+    "avg_latency_per_op_ns": 155927
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 200) (BestEffort) @ 8 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 1100,
+    "avg_latency_per_op_ns": 220099
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 50) (AllOrNothing) @ 16 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 1832,
+    "avg_latency_per_op_ns": 91635
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 50) (AllOrNothing) @ 16 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 1356,
+    "avg_latency_per_op_ns": 67832
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 50) (AllOrNothing) @ 16 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 3876,
+    "avg_latency_per_op_ns": 193822
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 50) (BestEffort) @ 16 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 610,
+    "avg_latency_per_op_ns": 30533
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 50) (BestEffort) @ 16 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 921,
+    "avg_latency_per_op_ns": 46084
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 50) (BestEffort) @ 16 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 2313,
+    "avg_latency_per_op_ns": 115694
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 100) (AllOrNothing) @ 16 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 2158,
+    "avg_latency_per_op_ns": 215832
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 100) (AllOrNothing) @ 16 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 1020,
+    "avg_latency_per_op_ns": 102028
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 100) (AllOrNothing) @ 16 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 3461,
+    "avg_latency_per_op_ns": 346165
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 100) (BestEffort) @ 16 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 627,
+    "avg_latency_per_op_ns": 62788
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 100) (BestEffort) @ 16 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 843,
+    "avg_latency_per_op_ns": 84370
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 100) (BestEffort) @ 16 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 1978,
+    "avg_latency_per_op_ns": 197842
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 200) (AllOrNothing) @ 16 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 1758,
+    "avg_latency_per_op_ns": 351605
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 200) (AllOrNothing) @ 16 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 907,
+    "avg_latency_per_op_ns": 181473
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 200) (AllOrNothing) @ 16 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 2866,
+    "avg_latency_per_op_ns": 573266
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 200) (BestEffort) @ 16 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 492,
+    "avg_latency_per_op_ns": 98458
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 200) (BestEffort) @ 16 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 778,
+    "avg_latency_per_op_ns": 155634
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 200) (BestEffort) @ 16 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 1601,
+    "avg_latency_per_op_ns": 320257
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 50) (AllOrNothing) @ 32 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 5891,
+    "avg_latency_per_op_ns": 294553
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 50) (AllOrNothing) @ 32 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 1409,
+    "avg_latency_per_op_ns": 70469
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 50) (AllOrNothing) @ 32 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 7024,
+    "avg_latency_per_op_ns": 351240
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 50) (BestEffort) @ 32 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 1150,
+    "avg_latency_per_op_ns": 57510
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 50) (BestEffort) @ 32 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 1068,
+    "avg_latency_per_op_ns": 53420
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 50) (BestEffort) @ 32 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 2951,
+    "avg_latency_per_op_ns": 147588
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 100) (AllOrNothing) @ 32 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 4396,
+    "avg_latency_per_op_ns": 439694
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 100) (AllOrNothing) @ 32 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 1058,
+    "avg_latency_per_op_ns": 105870
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 100) (AllOrNothing) @ 32 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 6561,
+    "avg_latency_per_op_ns": 656107
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 100) (BestEffort) @ 32 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 633,
+    "avg_latency_per_op_ns": 63359
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 100) (BestEffort) @ 32 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 946,
+    "avg_latency_per_op_ns": 94625
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 100) (BestEffort) @ 32 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 2376,
+    "avg_latency_per_op_ns": 237692
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 200) (AllOrNothing) @ 32 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 2578,
+    "avg_latency_per_op_ns": 515774
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 200) (AllOrNothing) @ 32 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 981,
+    "avg_latency_per_op_ns": 196378
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 200) (AllOrNothing) @ 32 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 4503,
+    "avg_latency_per_op_ns": 900653
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 200) (BestEffort) @ 32 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 579,
+    "avg_latency_per_op_ns": 115952
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 200) (BestEffort) @ 32 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 851,
+    "avg_latency_per_op_ns": 170221
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 200) (BestEffort) @ 32 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 2119,
+    "avg_latency_per_op_ns": 423903
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 50) (AllOrNothing) @ 64 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 10717,
+    "avg_latency_per_op_ns": 535862
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 50) (AllOrNothing) @ 64 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 1544,
+    "avg_latency_per_op_ns": 77213
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 50) (AllOrNothing) @ 64 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 14289,
+    "avg_latency_per_op_ns": 714492
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 50) (BestEffort) @ 64 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 1345,
+    "avg_latency_per_op_ns": 67298
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 50) (BestEffort) @ 64 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 923,
+    "avg_latency_per_op_ns": 46196
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 50) (BestEffort) @ 64 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 3919,
+    "avg_latency_per_op_ns": 195957
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 100) (AllOrNothing) @ 64 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 8192,
+    "avg_latency_per_op_ns": 819290
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 100) (AllOrNothing) @ 64 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 1017,
+    "avg_latency_per_op_ns": 101751
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 100) (AllOrNothing) @ 64 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 10685,
+    "avg_latency_per_op_ns": 1068520
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 100) (BestEffort) @ 64 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 711,
+    "avg_latency_per_op_ns": 71194
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 100) (BestEffort) @ 64 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 877,
+    "avg_latency_per_op_ns": 87705
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 100) (BestEffort) @ 64 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 3460,
+    "avg_latency_per_op_ns": 346056
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 200) (AllOrNothing) @ 64 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 6005,
+    "avg_latency_per_op_ns": 1201087
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 200) (AllOrNothing) @ 64 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 1104,
+    "avg_latency_per_op_ns": 220925
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 200) (AllOrNothing) @ 64 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 8466,
+    "avg_latency_per_op_ns": 1693308
+  },
+  {
+    "scenario_name": "Concurrent Batch Set (Size 200) (BestEffort) @ 64 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 615,
+    "avg_latency_per_op_ns": 123035
+  },
+  {
+    "scenario_name": "Concurrent Batch Get (Size 200) (BestEffort) @ 64 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 825,
+    "avg_latency_per_op_ns": 165013
+  },
+  {
+    "scenario_name": "Concurrent Batch Delete (Size 200) (BestEffort) @ 64 Concurrency (15 Shard(s))",
+    "avg_latency_per_item_ns": 2515,
+    "avg_latency_per_op_ns": 503027
+  }
+]

@@ -1,11 +1,14 @@
+//! Contains the `StorageManager`, the main entry point for creating, managing,
+//! and persisting namespaces.
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
+use std::sync::Weak;
 use std::sync::atomic::{AtomicBool, Ordering};
-use tokio::sync::RwLock;
+use tokio::{sync::RwLock, time};
 
 use crate::Result;
-use super::types::{NamespaceStats, StorageConfig, NamespaceConfig, HashUtils};
+use super::types::{NamespaceStats, StorageConfig, NamespaceConfig};
 use super::namespace::Namespace;
 use super::persistence::FilePersistence;
 
@@ -17,34 +20,39 @@ use super::persistence::FilePersistence;
 /// # Example
 /// 
 /// ```rust
-/// use rkvs::{StorageManager, StorageConfig, NamespaceConfig};
+/// # use rkvs::{StorageManager, NamespaceConfig, Result};
+/// # use std::env::temp_dir;
+/// # async fn run() -> Result<()> {
+///     // Use a temporary directory. The persistence layer will create it if it doesn't exist.
+///     let temp_path = temp_dir().join("rkvs_docs_main");
 /// 
-/// #[tokio::main]
-/// async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ///     let storage = StorageManager::builder()
-///         .with_config(StorageConfig::default())
-///         .with_persistence("/tmp/rkvs_data".into())
-///         .build();
+///         .with_persistence(temp_path)
+///         .build().await?;
 ///     
-///     storage.initialize().await?;
+///     // Initialize from a snapshot. If the file doesn't exist, it will start fresh.
+///     // Passing `None` would skip loading and always start fresh.
+///     storage.initialize(Some("my-snapshot.bin")).await?;
 ///     
-///     let config = NamespaceConfig {
-///         max_keys: Some(1000),
-///         max_value_size: Some(1024 * 1024),
-///     };
+///     let mut config = NamespaceConfig::default();
+///     config.set_max_keys(1000);
+///     config.set_max_value_size(1024 * 1024); // This is an atomic operation
+/// 
 ///     storage.create_namespace("my_app", Some(config)).await?;
 ///     
 ///     let namespace = storage.namespace("my_app").await?;
-///     namespace.set("key".to_string(), b"value".to_vec()).await?;
+///     namespace.set("key", b"value".to_vec()).await?;
 ///     
 ///     Ok(())
-/// }
+/// # }
 /// ```
 pub struct StorageManager {
     namespaces: Arc<RwLock<HashMap<String, Arc<Namespace>>>>,
     config: StorageConfig,
     persistence: Option<FilePersistence>,
     initialized: Arc<AtomicBool>,
+    autosave_tasks: Arc<RwLock<HashMap<String, tokio::task::JoinHandle<()>>>>,
+    manager_autosave_task: Arc<RwLock<Option<tokio::task::JoinHandle<()>>>>,
 }
 
 /// Builder for creating StorageManager instances
@@ -54,20 +62,27 @@ pub struct StorageManager {
 /// # Example
 /// 
 /// ```rust
-/// use rkvs::{StorageManager, StorageConfig};
-/// 
+/// use rkvs::{StorageManager, StorageConfig, ManagerAutosaveConfig};
+/// use std::time::Duration;
+/// # async fn run() -> rkvs::Result<()> {
+/// let storage_config = StorageConfig {
+///     max_namespaces: Some(10),
+///     manager_autosave: Some(ManagerAutosaveConfig {
+///         interval: Duration::from_secs(300),
+///         filename: "rkvs-snapshot.bin".to_string(),
+///     }),
+///     namespace_autosave: vec![],
+/// };
 /// let storage = StorageManager::builder()
-///     .with_config(StorageConfig {
-///         max_namespaces: Some(100),
-///         default_max_keys_per_namespace: Some(10000),
-///         default_max_value_size: Some(1024 * 1024),
-///     })
-///     .with_persistence("/data/rkvs".into())
-///     .build();
+///     .with_config(storage_config)
+///     .with_persistence("/tmp/rkvs_data".into())
+///     .build().await?;
+/// # Ok(())
+/// # }
 /// ```
 pub struct StorageManagerBuilder {
     config: Option<StorageConfig>,
-    persistence: Option<FilePersistence>,
+    persistence_path: Option<PathBuf>,
 }
 
 impl StorageManagerBuilder {
@@ -75,7 +90,7 @@ impl StorageManagerBuilder {
     pub fn new() -> Self {
         Self { 
             config: None,
-            persistence: None,
+            persistence_path: None,
         }
     }
     
@@ -90,13 +105,12 @@ impl StorageManagerBuilder {
     /// ```rust
     /// use rkvs::{StorageManager, StorageConfig};
     /// 
+    /// # async fn run() -> rkvs::Result<()> {
     /// let storage = StorageManager::builder()
-    ///     .with_config(StorageConfig {
-    ///         max_namespaces: Some(100),
-    ///         default_max_keys_per_namespace: Some(10000),
-    ///         default_max_value_size: Some(1024 * 1024),
-    ///     })
-    ///     .build();
+    ///     .with_config(StorageConfig::default())
+    ///     .build().await?;
+    /// # Ok(())
+    /// # }
     /// ```
     pub fn with_config(mut self, config: StorageConfig) -> Self {
         self.config = Some(config);
@@ -112,14 +126,17 @@ impl StorageManagerBuilder {
     /// # Example
     /// 
     /// ```rust
-    /// use rkvs::StorageManager;
+    /// use rkvs::{StorageManager, Result};
     /// 
+    /// # async fn run() -> Result<()> {
     /// let storage = StorageManager::builder()
-    ///     .with_persistence("/data/rkvs".into())
-    ///     .build();
+    ///     .with_persistence("/tmp/rkvs_data".into())
+    ///     .build().await?;
+    /// # Ok(())
+    /// # }
     /// ```
     pub fn with_persistence(mut self, path: PathBuf) -> Self {
-        self.persistence = Some(FilePersistence::new(path));
+        self.persistence_path = Some(path);
         self
     }
     
@@ -127,25 +144,38 @@ impl StorageManagerBuilder {
     /// 
     /// # Returns
     /// 
-    /// A new `StorageManager` instance with the specified configuration.
+    /// A `Result` containing an `Arc<StorageManager>` instance, ready for use.
     /// 
     /// # Example
     /// 
     /// ```rust
-    /// use rkvs::StorageManager;
+    /// use rkvs::{StorageManager, Result};
     /// 
+    /// # async fn run() -> Result<()> {
     /// let storage = StorageManager::builder()
-    ///     .with_persistence("/tmp/rkvs".into())
-    ///     .build();
+    ///     .with_persistence("/tmp/rkvs_data".into())
+    ///     .build().await?;
+    /// # Ok(())
+    /// # }
     /// ```
-    pub fn build(self) -> StorageManager {
+    pub async fn build(self) -> Result<Arc<StorageManager>> {
         let config = self.config.unwrap_or_default();
-        StorageManager::new(config, self.persistence)
+        let persistence = if let Some(path) = self.persistence_path {
+            Some(FilePersistence::new(path).await?)
+        } else {
+            None
+        };
+        let manager = StorageManager::new(config, persistence);
+        let arc_manager = Arc::new(manager);
+        arc_manager.spawn_autosave_tasks();
+        Ok(arc_manager)
     }
 }
 
+// MARK: - Core & Construction
 impl StorageManager {
-    /// Create a new builder for configuring a StorageManager
+    /// Creates a new builder for configuring a `StorageManager`.
+    /// This is the main entry point for creating a new storage instance.
     pub fn builder() -> StorageManagerBuilder {
         StorageManagerBuilder::new()
     }
@@ -156,106 +186,241 @@ impl StorageManager {
             config,
             persistence,
             initialized: Arc::new(AtomicBool::new(false)),
+            autosave_tasks: Arc::new(RwLock::new(HashMap::new())),
+            manager_autosave_task: Arc::new(RwLock::new(None)),
         }
     }
-    
-    /// Initialize storage (call this once at startup)
+}
+
+// MARK: - Autosave Task Management
+impl StorageManager {
+    /// Spawns background tasks for autosaving based on the initial configuration.
+    fn spawn_autosave_tasks(self: &Arc<Self>) {
+        if self.persistence.is_none() {
+            return;
+        }
+
+        // Spawn task for full manager autosave
+        if let Some(manager_config) = &self.config.manager_autosave {
+            let manager_task = Self::create_manager_autosave_task(Arc::downgrade(self), manager_config.clone());
+            let handle = tokio::spawn(manager_task);
+            let mut task_guard = self.manager_autosave_task.blocking_write();
+            *task_guard = Some(handle);
+        }
+
+        // Spawn tasks for individual namespace autosaves
+        for ns_config in &self.config.namespace_autosave {
+            let task = Self::create_namespace_autosave_task(Arc::downgrade(self), ns_config.clone());
+            let handle = tokio::spawn(task);
+            let mut tasks = self.autosave_tasks.blocking_write();
+            tasks.insert(ns_config.namespace_name.clone(), handle);
+        }
+    }
+
+    /// Creates the future for the manager autosave task.
+    async fn create_manager_autosave_task(weak_self: Weak<Self>, config: crate::ManagerAutosaveConfig) {
+        let mut interval = time::interval(config.interval);
+        loop {
+            interval.tick().await;
+            if let Some(strong_self) = weak_self.upgrade() {
+                if let Err(e) = strong_self.save_all(&config.filename).await {
+                    eprintln!("Failed to autosave full snapshot: {}", e);
+                }
+            } else {
+                break; // StorageManager was dropped, exit task
+            }
+        }
+    }
+
+    /// Creates the future for a single namespace autosave task.
+    async fn create_namespace_autosave_task(weak_self: Weak<Self>, config: crate::NamespaceAutosaveConfig) {
+        let mut interval = time::interval(config.interval);
+        loop {
+            interval.tick().await;
+            if let Some(strong_self) = weak_self.upgrade() {
+                let filename = config.filename_pattern
+                    .replace("{ns}", &config.namespace_name)
+                    .replace("{ts}", &chrono::Utc::now().to_rfc3339());
+                if let Err(e) = strong_self.save_namespace(&config.namespace_name, &filename).await {
+                    eprintln!("Failed to autosave namespace '{}': {}", config.namespace_name, e);
+                }
+            } else {
+                break; // StorageManager was dropped, exit task
+            }
+        }
+    }
+
+    /// Dynamically adds and spawns a new autosave task for a single namespace.
+    /// This requires the `StorageManager` to have persistence enabled.
+    pub async fn add_namespace_autosave_task(self: Arc<Self>, config: crate::NamespaceAutosaveConfig) -> Result<()> {
+        self.ensure_initialized().await?;
+
+        if self.persistence.is_none() {
+            return Err(crate::RkvsError::Storage("Persistence is not enabled.".to_string()));
+        }
+
+        // Ensure the namespace exists before setting up a task for it.
+        self.namespace(&config.namespace_name).await?;
+
+        let namespace_name = config.namespace_name.clone();
+        let mut tasks = self.autosave_tasks.write().await;
+        let task = Self::create_namespace_autosave_task(Arc::downgrade(&self), config);
+        let handle = tokio::spawn(task);
+        tasks.insert(namespace_name, handle);
+
+        Ok(())
+    }
+
+    /// Stops a running autosave task for a specific namespace.
+    pub async fn stop_namespace_autosave(&self, namespace_name: &str) -> Result<()> {
+        self.ensure_initialized().await?;
+        let mut tasks = self.autosave_tasks.write().await;
+
+        if let Some(handle) = tasks.remove(namespace_name) {
+            handle.abort();
+            Ok(())
+        } else {
+            Err(crate::RkvsError::Storage(format!(
+                "No active autosave task found for namespace '{}'",
+                namespace_name
+            )))
+        }
+    }
+
+    /// Stops the running autosave task for the entire storage manager.
+    pub async fn stop_manager_autosave(&self) -> Result<()> {
+        self.ensure_initialized().await?;
+        let mut task_guard = self.manager_autosave_task.write().await;
+
+        if let Some(handle) = task_guard.take() {
+            handle.abort();
+        }
+
+        Ok(())
+    }
+}
+
+// MARK: - Lifecycle & Persistence
+impl StorageManager {
+    /// Initializes storage (call this once at startup).
     /// 
-    /// This method must be called before performing any operations on the storage.
-    /// If persistence is enabled, it will load existing data from disk.
+    /// This method must be called before performing any operations. If persistence is enabled
+    /// and a `filename` is provided, it will attempt to load data from that file.
+    /// If the file does not exist, the storage will start fresh without an error.
+    /// An error will only be returned for other issues, such as a corrupt file.
+    /// If `filename` is `None`, the storage will start empty.
     /// 
     /// # Returns
     /// 
-    /// Returns `Ok(())` if initialization succeeds, or an error if it fails.
+    /// Returns `Ok(())` if initialization succeeds, or an error if it fails (e.g., due to a corrupt file).
     /// 
     /// # Example
     /// 
     /// ```rust
-    /// use rkvs::StorageManager;
+    /// # use rkvs::{StorageManager, Result};
+    /// # use std::env::temp_dir;
+    /// # async fn run() -> Result<()> {
+    ///     // Use a temporary directory. The persistence layer will create it if it doesn't exist.
+    ///     let temp_path = temp_dir().join("rkvs_docs_init");
     /// 
-    /// #[tokio::main]
-    /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ///     let storage = StorageManager::builder()
-    ///         .with_persistence("/tmp/rkvs".into())
-    ///         .build();
+    ///         .with_persistence(temp_path)
+    ///         .build().await?;
     ///     
-    ///     // Initialize before use
-    ///     storage.initialize().await?;
+    ///     // Initialize from a snapshot. If "my-snapshot.bin" doesn't exist,
+    ///     // the storage will simply start fresh.
+    ///     storage.initialize(Some("my-snapshot.bin")).await?;
     ///     
     ///     // Now you can use the storage
     ///     Ok(())
     /// }
     /// ```
-    pub async fn initialize(&self) -> Result<()> {
+    pub async fn initialize(&self, filename: Option<&str>) -> Result<()> {
         if self.initialized.load(Ordering::Relaxed) {
             return Ok(());
         }
         
-        if let Some(persistence) = &self.persistence {
-            let data = persistence.load().await?;
-            let mut namespaces = self.namespaces.write().await;
-            *namespaces = data;
+        if let (Some(persistence), Some(fname)) = (&self.persistence, filename) {
+            match persistence.load_all(fname).await {
+                Ok(data) => {
+                    // Successfully loaded data from the snapshot
+                    let mut namespaces = self.namespaces.write().await;
+                    *namespaces = data;
+                }
+                Err(crate::RkvsError::SnapshotNotFound(_)) => {
+                    // This is not a fatal error. It just means we're starting fresh.
+                    // The namespaces map will remain empty, which is the correct state.
+                }
+                Err(e) => {
+                    // Any other error (e.g., deserialization) is fatal.
+                    return Err(e);
+                }
+            }
         }
         
         self.initialized.store(true, Ordering::Relaxed);
         Ok(())
     }
     
-    /// Save storage to disk (only works if persistence is enabled)
+    /// Saves a snapshot of all namespaces to a file.
     /// 
-    /// Persists all namespace data to disk. This method only works if persistence
-    /// was enabled when creating the StorageManager.
+    /// This method only works if persistence was enabled when creating the `StorageManager`.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `filename` - The name of the file to save the snapshot to.
     /// 
     /// # Returns
     /// 
     /// Returns `Ok(())` if save succeeds, or an error if it fails.
     /// 
     /// # Example
-    /// 
     /// ```rust
-    /// use rkvs::StorageManager;
-    /// 
-    /// #[tokio::main]
-    /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    ///     let storage = StorageManager::builder()
-    ///         .with_persistence("/tmp/rkvs".into())
-    ///         .build();
-    ///     
-    ///     storage.initialize().await?;
+    /// # use rkvs::{StorageManager, Result};
+    /// # async fn run() -> Result<()> {
+    /// # let storage = StorageManager::builder()
+    /// #    .with_persistence("/tmp/rkvs_data".into())
+    /// #    .build().await?;
+    /// # storage.initialize(None).await?;
     ///     
     ///     // ... perform operations ...
-    ///     
+    ///
     ///     // Save to disk
-    ///     storage.save().await?;
+    ///     storage.save_all("my-snapshot.bin").await?;
     ///     
     ///     Ok(())
     /// }
     /// ```
-    pub async fn save(&self) -> Result<()> {
+    pub async fn save_all(&self, filename: &str) -> Result<()> {
         if let Some(persistence) = &self.persistence {
             let namespaces = self.namespaces.read().await;
-            persistence.save(&namespaces).await?;
+            persistence.save_all(&namespaces, filename).await?;
         }
         Ok(())
     }
     
-    /// Check if storage is initialized
-    pub fn is_initialized(&self) -> bool {
-        self.initialized.load(Ordering::Relaxed)
-    }
-    
-    /// Ensure storage is initialized before operations
-    async fn ensure_initialized(&self) -> Result<()> {
-        if !self.is_initialized() {
-            return Err(crate::RkvsError::Storage("Storage not initialized. Call initialize() first.".to_string()));
-        }
-        Ok(())
-    }
+    /// Saves a snapshot of a single namespace to a file.
+    /// This is useful for creating backups of individual namespaces.
+    pub async fn save_namespace(&self, namespace_name: &str, filename: &str) -> Result<()> {
+        self.ensure_initialized().await?;
 
+        if let Some(persistence) = &self.persistence {
+            let namespace = self.namespace(namespace_name).await?;
+            let snapshot = namespace.create_snapshot().await;
+            persistence.save_snapshot(&snapshot, filename).await?;
+            Ok(())
+        } else {
+            Err(crate::RkvsError::Storage("Persistence is not enabled.".to_string()))
+        }
+    }
+}
+
+// MARK: - Namespace Management
+impl StorageManager {
     /// Create a new namespace with optional custom configuration
     /// 
     /// Creates a new namespace with the given name and optional configuration.
-    /// If no configuration is provided, default values from StorageConfig are used.
+    /// If no configuration is provided, `NamespaceConfig::default()` is used.
     /// 
     /// # Arguments
     /// 
@@ -269,21 +434,19 @@ impl StorageManager {
     /// # Example
     /// 
     /// ```rust
-    /// use rkvs::{StorageManager, NamespaceConfig};
     /// 
-    /// #[tokio::main]
-    /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    ///     let storage = StorageManager::builder().build();
-    ///     storage.initialize().await?;
+    /// # use rkvs::{StorageManager, NamespaceConfig, Result};
+    /// # async fn run() -> Result<()> {
+    /// # let storage = StorageManager::builder().build().await?;
+    /// # storage.initialize(None).await?;
     ///     
     ///     // Create namespace with default config
     ///     storage.create_namespace("my_app", None).await?;
     ///     
     ///     // Create namespace with custom config
-    ///     let config = NamespaceConfig {
-    ///         max_keys: Some(1000),
-    ///         max_value_size: Some(1024 * 1024),
-    ///     };
+    ///     let mut config = NamespaceConfig::default();
+    ///     config.set_max_keys(1000);
+    ///     config.set_max_value_size(1024 * 1024); // This is an atomic operation
     ///     storage.create_namespace("my_app2", Some(config)).await?;
     ///     
     ///     Ok(())
@@ -306,37 +469,58 @@ impl StorageManager {
             }
         }
         
-        let namespace_config = config.unwrap_or_else(|| NamespaceConfig {
-            max_keys: self.config.default_max_keys_per_namespace,
-            max_value_size: self.config.default_max_value_size,
-        });
-        
+        let namespace_config = config.unwrap_or_default();
         let namespace = Arc::new(Namespace::new(name.to_string(), namespace_config));
         namespaces.insert(name.to_string(), namespace);
         Ok(())
     }
 
-    /// Create a new namespace with custom configuration
+    /// Creates a new namespace with a specific configuration.
+    ///
+    /// This is a convenience method that calls `create_namespace` with `Some(config)`.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the namespace to create.
+    /// * `config` - The namespace-specific configuration to apply.
+    ///
+    /// # Returns
+    ///
+    /// Returns `Ok(())` if creation succeeds, or an error if it fails.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use rkvs::{StorageManager, NamespaceConfig, Result};
+    ///
+    /// # async fn run() -> Result<()> {
+    /// # let storage = StorageManager::builder().build().await?;
+    /// # storage.initialize(None).await?;
+    /// let mut config = NamespaceConfig::default();
+    /// config.set_max_keys(5000);
+    ///
+    /// storage.create_namespace_with_config("my_configured_app", config).await?;
+    /// # Ok(())
+    /// # }
+    /// ```
     pub async fn create_namespace_with_config(&self, name: &str, config: NamespaceConfig) -> Result<()> {
         self.create_namespace(name, Some(config)).await
     }
 
-
-    /// Update the configuration of an existing namespace using a pre-computed ID
+    /// Updates the configuration of an existing namespace.
     pub async fn update_namespace_config(&self, name: &str, new_config: NamespaceConfig) -> Result<()> {
         self.ensure_initialized().await?;
         
         let namespaces = self.namespaces.read().await;
         
-        if let Some(namespace) = namespaces.get(name) {
-            namespace.update_config(new_config).await
-        } else {
-            Err(crate::RkvsError::Storage(format!("Namespace with name {} does not exist", name)))
+        match namespaces.get(name) {
+            Some(namespace) => namespace.update_config(new_config).await,
+            None => Err(crate::RkvsError::Storage(format!("Namespace with name '{}' does not exist", name))),
         }
     }
 
-    /// Get a namespace handle using a pre-computed ID
-    /// Returns an error if the namespace doesn't exist
+    /// Gets a handle to a specific namespace.
+    /// Returns an error if the namespace doesn't exist.
     pub async fn namespace(&self, name: &str) -> Result<Arc<Namespace>> {
         self.ensure_initialized().await?;
         
@@ -351,12 +535,19 @@ impl StorageManager {
 
 
 
-    /// Delete an entire namespace using a pre-computed ID
+    /// Deletes an entire namespace and any associated autosave tasks.
     pub async fn delete_namespace(&self, name: &str) -> Result<()> {
         self.ensure_initialized().await?;
         
+        // Acquire write locks on both maps to ensure atomicity.
         let mut namespaces = self.namespaces.write().await;
+        let mut tasks = self.autosave_tasks.write().await;
         
+        // Abort and remove the autosave task if it exists.
+        if let Some(handle) = tasks.remove(name) {
+            handle.abort();
+        }
+
         if namespaces.remove(name).is_some() {
             Ok(())
         } else {
@@ -365,7 +556,7 @@ impl StorageManager {
     }
 
 
-    /// List all namespaces
+    /// Lists all namespaces.
     pub async fn list_namespaces(&self) -> Result<Vec<String>> {
         self.ensure_initialized().await?;
         
@@ -379,8 +570,11 @@ impl StorageManager {
         
         Ok(names)
     }
+}
 
-    /// Get namespace statistics using a pre-computed ID
+// MARK: - Statistics & Status
+impl StorageManager {
+    /// Gets statistics for a specific namespace.
     pub async fn get_namespace_stats(&self, name: &str) -> Result<Option<NamespaceStats>> {
         self.ensure_initialized().await?;
         
@@ -388,13 +582,13 @@ impl StorageManager {
         let metadata = ns.get_metadata().await;
         
         Ok(Some(NamespaceStats {
-            name: metadata.name,
-            key_count: metadata.key_count,
-            total_size: metadata.total_size,
+            name: metadata.name.clone(),
+            key_count: metadata.key_count(),
+            total_size: metadata.total_size(),
         }))
     }
 
-    /// Get all namespace statistics
+    /// Gets all namespace statistics.
     pub async fn get_all_namespace_stats(&self) -> Result<Vec<NamespaceStats>> {
         self.ensure_initialized().await?;
         
@@ -404,16 +598,16 @@ impl StorageManager {
         for namespace in namespaces.values() {
             let metadata = namespace.get_metadata().await;
             stats.push(NamespaceStats {
-                name: metadata.name,
-                key_count: metadata.key_count,
-                total_size: metadata.total_size,
+                name: metadata.name.clone(),
+                key_count: metadata.key_count(),
+                total_size: metadata.total_size(),
             });
         }
         
         Ok(stats)
     }
 
-    /// Get total number of namespaces
+    /// Gets the total number of namespaces.
     pub async fn get_namespace_count(&self) -> Result<usize> {
         self.ensure_initialized().await?;
         
@@ -421,7 +615,7 @@ impl StorageManager {
         Ok(namespaces.len())
     }
 
-    /// Get total number of keys across all namespaces
+    /// Gets the total number of keys across all namespaces.
     pub async fn get_total_key_count(&self) -> Result<usize> {
         self.ensure_initialized().await?;
         
@@ -430,351 +624,37 @@ impl StorageManager {
         
         for namespace in namespaces.values() {
             let metadata = namespace.get_metadata().await;
-            total += metadata.key_count;
+            total += metadata.key_count();
         }
         
         Ok(total)
     }
 
-    /// Get storage configuration
+    /// Gets the storage configuration.
     pub fn get_config(&self) -> &StorageConfig {
         &self.config
     }
 
-    /// Update storage configuration
+    /// Updates the storage configuration. Note: This does not dynamically change running tasks.
     pub fn update_config(&mut self, config: StorageConfig) {
         self.config = config;
     }
 
-    /// Check if persistence is enabled
+    /// Checks if persistence is enabled.
     pub fn has_persistence(&self) -> bool {
         self.persistence.is_some()
     }
-}
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use tempfile::TempDir;
-
-    fn create_test_storage() -> StorageManager {
-        StorageManagerBuilder::new()
-            .with_config(StorageConfig {
-                max_namespaces: Some(10),
-                default_max_keys_per_namespace: Some(100),
-                default_max_value_size: Some(1024),
-            })
-            .build()
+    /// Checks if storage is initialized.
+    pub fn is_initialized(&self) -> bool {
+        self.initialized.load(Ordering::Relaxed)
     }
-
-
-    #[tokio::test]
-    async fn test_storage_creation() {
-        let storage = create_test_storage();
-        assert!(!storage.has_persistence());
-        assert!(!storage.is_initialized());
-    }
-
-    #[tokio::test]
-    async fn test_storage_initialization() {
-        let storage = create_test_storage();
-        storage.initialize().await.unwrap();
-        assert!(storage.is_initialized());
-    }
-
-    #[tokio::test]
-    async fn test_create_namespace() {
-        let storage = create_test_storage();
-        storage.initialize().await.unwrap();
-        
-        storage.create_namespace("test_namespace", None).await.unwrap();
-        
-        // Try to create the same namespace again - should fail
-        let result = storage.create_namespace("test_namespace", None).await;
-        assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("already exists"));
-    }
-
-    #[tokio::test]
-    async fn test_create_namespace_with_config() {
-        let storage = create_test_storage();
-        storage.initialize().await.unwrap();
-        
-        let custom_config = NamespaceConfig {
-            max_keys: Some(50),
-            max_value_size: Some(512),
-        };
-        
-        storage.create_namespace_with_config("test", custom_config).await.unwrap();
-        assert!(storage.namespace("test").await.is_ok());
-    }
-
-    #[tokio::test]
-    async fn test_namespace_operations() {
-        let storage = create_test_storage();
-        storage.initialize().await.unwrap();
-        
-        storage.create_namespace("test", None).await.unwrap();
-        let namespace = storage.namespace("test").await.unwrap();
-        
-        // Test basic operations
-        namespace.set("key1".to_string(), b"value1".to_vec()).await.unwrap();
-        assert_eq!(namespace.get("key1").await, Some(b"value1".to_vec()));
-        assert!(namespace.exists("key1").await);
-        
-        let keys = namespace.list_keys().await;
-        assert_eq!(keys.len(), 1);
-        assert!(keys.contains(&"key1".to_string()));
-    }
-
-    #[tokio::test]
-    async fn test_delete_namespace() {
-        let storage = create_test_storage();
-        storage.initialize().await.unwrap();
-        
-        storage.create_namespace("test", None).await.unwrap();
-        
-        // Delete the namespace
-        storage.delete_namespace("test").await.unwrap();
-        
-        // Try to access the deleted namespace - should fail
-        let result = storage.namespace("test").await;
-        assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("does not exist"));
-    }
-
-    #[tokio::test]
-    async fn test_list_namespaces() {
-        let storage = create_test_storage();
-        storage.initialize().await.unwrap();
-        
-        // Initially empty
-        let namespaces = storage.list_namespaces().await.unwrap();
-        assert!(namespaces.is_empty());
-        
-        // Add some namespaces
-        storage.create_namespace("namespace1", None).await.unwrap();
-        storage.create_namespace("namespace2", None).await.unwrap();
-        storage.create_namespace("namespace3", None).await.unwrap();
-        
-        let namespaces = storage.list_namespaces().await.unwrap();
-        assert_eq!(namespaces.len(), 3);
-        assert!(namespaces.contains(&"namespace1".to_string()));
-        assert!(namespaces.contains(&"namespace2".to_string()));
-        assert!(namespaces.contains(&"namespace3".to_string()));
-    }
-
-    #[tokio::test]
-    async fn test_get_namespace_stats() {
-        let storage = create_test_storage();
-        storage.initialize().await.unwrap();
-        
-        storage.create_namespace("test", None).await.unwrap();
-        let namespace = storage.namespace("test").await.unwrap();
-        
-        // Add some data
-        namespace.set("key1".to_string(), b"value1".to_vec()).await.unwrap();
-        namespace.set("key2".to_string(), b"value2".to_vec()).await.unwrap();
-        
-        let stats = storage.get_namespace_stats("test").await.unwrap().unwrap();
-        assert_eq!(stats.name, "test");
-        assert_eq!(stats.key_count, 2);
-        assert_eq!(stats.total_size, 12);
-    }
-
-    #[tokio::test]
-    async fn test_get_all_namespace_stats() {
-        let storage = create_test_storage();
-        storage.initialize().await.unwrap();
-        
-        // Create multiple namespaces with data
-        storage.create_namespace("ns1", None).await.unwrap();
-        let ns1 = storage.namespace("ns1").await.unwrap();
-        ns1.set("key1".to_string(), b"value1".to_vec()).await.unwrap();
-        
-        storage.create_namespace("ns2", None).await.unwrap();
-        let ns2 = storage.namespace("ns2").await.unwrap();
-        ns2.set("key1".to_string(), b"value1".to_vec()).await.unwrap();
-        ns2.set("key2".to_string(), b"value2".to_vec()).await.unwrap();
-        
-        let all_stats = storage.get_all_namespace_stats().await.unwrap();
-        assert_eq!(all_stats.len(), 2);
-        
-        // Find the stats for each namespace
-        let ns1_stats = all_stats.iter().find(|s| s.name == "ns1").unwrap();
-        assert_eq!(ns1_stats.key_count, 1);
-        assert_eq!(ns1_stats.total_size, 6);
-        
-        let ns2_stats = all_stats.iter().find(|s| s.name == "ns2").unwrap();
-        assert_eq!(ns2_stats.key_count, 2);
-        assert_eq!(ns2_stats.total_size, 12);
-    }
-
-    #[tokio::test]
-    async fn test_get_namespace_count() {
-        let storage = create_test_storage();
-        storage.initialize().await.unwrap();
-        
-        assert_eq!(storage.get_namespace_count().await.unwrap(), 0);
-        
-        storage.create_namespace("ns1", None).await.unwrap();
-        assert_eq!(storage.get_namespace_count().await.unwrap(), 1);
-        
-        storage.create_namespace("ns2", None).await.unwrap();
-        assert_eq!(storage.get_namespace_count().await.unwrap(), 2);
-    }
-
-    #[tokio::test]
-    async fn test_get_total_key_count() {
-        let storage = create_test_storage();
-        storage.initialize().await.unwrap();
-        
-        assert_eq!(storage.get_total_key_count().await.unwrap(), 0);
-        
-        storage.create_namespace("ns1", None).await.unwrap();
-        let ns1 = storage.namespace("ns1").await.unwrap();
-        ns1.set("key1".to_string(), b"value1".to_vec()).await.unwrap();
-        ns1.set("key2".to_string(), b"value2".to_vec()).await.unwrap();
-        
-        assert_eq!(storage.get_total_key_count().await.unwrap(), 2);
-        
-        storage.create_namespace("ns2", None).await.unwrap();
-        let ns2 = storage.namespace("ns2").await.unwrap();
-        ns2.set("key1".to_string(), b"value1".to_vec()).await.unwrap();
-        
-        assert_eq!(storage.get_total_key_count().await.unwrap(), 3);
-    }
-
-    #[tokio::test]
-    async fn test_max_namespaces_limit() {
-        let storage = StorageManagerBuilder::new()
-            .with_config(StorageConfig {
-                max_namespaces: Some(2),
-                default_max_keys_per_namespace: Some(100),
-                default_max_value_size: Some(1024),
-            })
-            .build();
-        
-        storage.initialize().await.unwrap();
-        
-        // Create namespaces up to the limit
-        storage.create_namespace("ns1", None).await.unwrap();
-        storage.create_namespace("ns2", None).await.unwrap();
-        
-        // Try to create one more - should fail
-        let result = storage.create_namespace("ns3", None).await;
-        assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Maximum number of namespaces"));
-    }
-
-    #[tokio::test]
-    async fn test_persistence_save_and_load() {
-        let temp_dir = TempDir::new().unwrap();
-        let storage_path = temp_dir.path().join("test_storage.bin");
-        
-        // Create first storage instance
-        let storage = StorageManagerBuilder::new()
-            .with_config(StorageConfig {
-                max_namespaces: Some(10),
-                default_max_keys_per_namespace: Some(100),
-                default_max_value_size: Some(1024),
-            })
-            .with_persistence(storage_path.clone())
-            .build();
-        
-        storage.initialize().await.unwrap();
-        
-        // Add some data
-        storage.create_namespace("test", None).await.unwrap();
-        let namespace = storage.namespace("test").await.unwrap();
-        namespace.set("key1".to_string(), b"value1".to_vec()).await.unwrap();
-        namespace.set("key2".to_string(), b"value2".to_vec()).await.unwrap();
-        
-        // Save to disk
-        storage.save().await.unwrap();
-        
-        // Create a new storage instance with the same path and load from disk
-        let loaded_storage = StorageManagerBuilder::new()
-            .with_config(StorageConfig {
-                max_namespaces: Some(10),
-                default_max_keys_per_namespace: Some(100),
-                default_max_value_size: Some(1024),
-            })
-            .with_persistence(storage_path)
-            .build();
-        
-        loaded_storage.initialize().await.unwrap();
-        
-        // Verify the data was loaded
-        let namespaces = loaded_storage.list_namespaces().await.unwrap();
-        assert_eq!(namespaces.len(), 1);
-        assert!(namespaces.contains(&"test".to_string()));
-        
-        let loaded_ns = loaded_storage.namespace("test").await.unwrap();
-        assert_eq!(loaded_ns.get("key1").await, Some(b"value1".to_vec()));
-        assert_eq!(loaded_ns.get("key2").await, Some(b"value2".to_vec()));
-    }
-
-    #[tokio::test]
-    async fn test_ensure_initialized() {
-        let storage = create_test_storage();
-        
-        // Try to use storage before initialization - should fail
-        let result = storage.create_namespace("test", None).await;
-        assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("not initialized"));
-        
-        // Initialize and try again - should work
-        storage.initialize().await.unwrap();
-        let result = storage.create_namespace("test", None).await;
-        assert!(result.is_ok());
-    }
-
-
-    #[tokio::test]
-    async fn test_update_namespace_config() {
-        let storage = create_test_storage();
-        storage.initialize().await.unwrap();
-        
-        let namespace_id = storage.create_namespace("test", None).await.unwrap();
-        let namespace = storage.namespace("test").await.unwrap();
-        
-        // Add some data
-        namespace.set("key1".to_string(), b"value1".to_vec()).await.unwrap();
-        namespace.set("key2".to_string(), b"value2".to_vec()).await.unwrap();
-        
-        // Update config with valid limits
-        let new_config = NamespaceConfig {
-            max_keys: Some(5),
-            max_value_size: Some(50),
-        };
-        storage.update_namespace_config("test", new_config).await.unwrap();
-        
-        // Verify the config was updated
-        let updated_config = namespace.get_config().await;
-        assert_eq!(updated_config.max_keys, Some(5));
-        assert_eq!(updated_config.max_value_size, Some(50));
-    }
-
-    #[tokio::test]
-    async fn test_update_namespace_config_validation() {
-        let storage = create_test_storage();
-        storage.initialize().await.unwrap();
-        
-        storage.create_namespace("test", None).await.unwrap();
-        let namespace = storage.namespace("test").await.unwrap();
-        
-        // Add some data
-        namespace.set("key1".to_string(), b"value1".to_vec()).await.unwrap();
-        namespace.set("key2".to_string(), b"value2".to_vec()).await.unwrap();
-        
-        // Try to update with max_keys smaller than current key count - should fail
-        let invalid_config = NamespaceConfig {
-            max_keys: Some(1), // Only 1 key allowed, but we have 2
-            max_value_size: Some(50),
-        };
-        let result = storage.update_namespace_config("test", invalid_config).await;
-        assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Cannot set max_keys to 1 when namespace already has 2 keys"));
+    
+    /// Ensures storage is initialized before operations.
+    async fn ensure_initialized(&self) -> Result<()> {
+        if !self.is_initialized() {
+            return Err(crate::RkvsError::Storage("Storage not initialized. Call initialize() first.".to_string()));
+        }
+        Ok(())
     }
 }

@@ -1,7 +1,7 @@
 [package]
 name = "rkvs"
-version = "0.2.0"
-edition = "2021"
+version = "0.3.0"
+edition = "2024"
 description = "A high-performance, namespace-based key-value storage system with async operations and batch processing"
 authors = ["RKVS Contributors"]
 license = "MIT"
@@ -16,18 +16,46 @@ path = "src/lib.rs"
 
 [dependencies]
 tokio = { version = "1.0", features = ["full"] }
-serde = { version = "1.0", features = ["derive"] }
+serde = { version = "1.0", features = ["derive", "rc"] }
 bincode = "1.3"
 sha2 = "0.10"
 thiserror = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
 tempfile = "3.0"
 clap = { version = "4.0", features = ["derive"] }
 hex = "0.4"
+futures = "0.3"
+serde_json = "1.0"
 
 [dev-dependencies]
-tokio-test = "0.4"
-criterion = { version = "0.5", features = ["html_reports"] }
+rand = "0.8"
+serde_json = "1.0"
+futures = "0.3.31"
 
 [[bench]]
-name = "rkvs_benchmarks"
+name = "operations_bench"
+path = "benches/operations_bench.rs"
 harness = false
+
+[[bench]]
+name = "concurrent_bench"
+path = "benches/concurrent_bench.rs"
+harness = false
+
+[[bench]]
+name = "sharding_overhead_bench"
+path = "benches/sharding_overhead_bench.rs"
+harness = false
+
+[[bench]]
+name = "batch_operations_bench"
+path = "benches/batch_operations_bench.rs"
+harness = false
+
+[[bench]]
+name = "batch_concurrent_bench"
+path = "benches/batch_concurrent_bench.rs"
+harness = false
+
+[profile.bench]
+debug = true
