@@ -256,7 +256,10 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Changelog
 
-### v0.3.0 (Latest)
+### v0.3.1 (Latest)
+- **Fix**: Fixed persistance to save the config along the manager
+
+### v0.3.0
 - **Core Feature**: Implemented automatic sharding for namespaces.
 - **Persistence**: Implemented automated background persistence for both the entire storage manager and individual namespaces.
 - **Batch Operations**: Reworked batch operations for `set`, `get`, `delete`, and `consume` with `AllOrNothing` and `BestEffort` modes.
