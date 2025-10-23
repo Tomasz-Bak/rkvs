@@ -83,13 +83,12 @@
 //! }
 //! ```
 
-
 pub mod data_table;
 pub mod error;
-pub mod types;
 pub mod namespace;
 pub mod manager;
 pub mod persistence;
+pub mod types;
 
 // Re-export commonly used types
 pub use error::{RkvsError, Result};
