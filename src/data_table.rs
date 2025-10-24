@@ -1,7 +1,7 @@
 //! Contains the `DataTable` struct, the core in-memory data structure for a single shard.
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
-use serde::{Serialize, Deserialize};
 
 /// DataTable newtype optimized for snapshots with Arc-wrapped values
 /// Keys are Vec<u8>, values are Arc<Vec<u8>> for efficient cloning during snapshots
@@ -57,14 +57,15 @@ impl DataTable {
     /// Get multiple values by keys
     pub fn get_multiple(&self, keys: &[Vec<u8>]) -> Vec<(Vec<u8>, Arc<Vec<u8>>)> {
         keys.iter()
-            .filter_map(|key| {
-                self.0.get(key).map(|value| (key.clone(), value.clone()))
-            })
+            .filter_map(|key| self.0.get(key).map(|value| (key.clone(), value.clone())))
             .collect()
     }
 
     /// Set multiple key-value pairs, returns the old values
-    pub fn set_multiple(&mut self, items: Vec<(Vec<u8>, Vec<u8>)>) -> Vec<(Vec<u8>, Option<Arc<Vec<u8>>>)> {
+    pub fn set_multiple(
+        &mut self,
+        items: Vec<(Vec<u8>, Vec<u8>)>,
+    ) -> Vec<(Vec<u8>, Option<Arc<Vec<u8>>>)> {
         items
             .into_iter()
             .map(|(key, value)| {

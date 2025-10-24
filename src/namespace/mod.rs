@@ -51,7 +51,9 @@ impl Namespace {
 
         let shards = (0..config.shard_count())
             .map(|_| {
-                Arc::new(RwLock::new(DataTable::with_capacity(DEFAULT_SHARD_CAPACITY)))
+                Arc::new(RwLock::new(DataTable::with_capacity(
+                    DEFAULT_SHARD_CAPACITY,
+                )))
             })
             .collect();
 

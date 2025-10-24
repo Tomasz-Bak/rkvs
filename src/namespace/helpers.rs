@@ -1,5 +1,5 @@
 //! Contains internal helper functions for the `Namespace` module.
-use super::{Namespace, RkvsError, Result};
+use super::{Namespace, Result, RkvsError};
 use crate::data_table::DataTable;
 use std::sync::Arc;
 use tokio::sync::RwLock;

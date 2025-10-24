@@ -7,7 +7,10 @@ use std::time::Instant;
 impl Namespace {
     /// Returns a list of all keys in the namespace.
     pub async fn list_keys(&self) -> Vec<String> {
-        let shards_guard = self.timeout_read_lock(&self.shards, "list_keys").await.unwrap(); // Should not fail
+        let shards_guard = self
+            .timeout_read_lock(&self.shards, "list_keys")
+            .await
+            .unwrap(); // Should not fail
         let mut all_keys = Vec::with_capacity(self.metadata.key_count());
 
         for shard in shards_guard.iter() {
@@ -27,7 +30,10 @@ impl Namespace {
         items: Vec<(String, Vec<u8>)>,
         mode: BatchMode,
     ) -> BatchResult<Vec<(String, Option<Vec<u8>>)>> {
-        let byte_items = items.into_iter().map(|(k, v)| (k.into_bytes(), v)).collect();
+        let byte_items = items
+            .into_iter()
+            .map(|(k, v)| (k.into_bytes(), v))
+            .collect();
         let result = self.set_multiple_bytes(byte_items, mode).await;
 
         let data = result.data.map(|op_results| {
@@ -71,7 +77,11 @@ impl Namespace {
                 errors.push(BatchError {
                     key: String::from_utf8_lossy(&key_bytes).to_string(),
                     operation: "set".to_string(),
-                    error_message: format!("Value size {} exceeds maximum {}", value.len(), max_value_size),
+                    error_message: format!(
+                        "Value size {} exceeds maximum {}",
+                        value.len(),
+                        max_value_size
+                    ),
                     index,
                 });
                 continue;
@@ -124,7 +134,7 @@ impl Namespace {
                                     ),
                                     index: 0,
                                 }]),
-                            }
+                            };
                         }
                     }
                 }
@@ -141,7 +151,8 @@ impl Namespace {
                             // A key is "new" only if it's not in the shard AND not already seen in this batch.
                             if shard_guard.has_key(key_bytes) {
                                 let existing = shard_guard.get_value(key_bytes).unwrap(); // Safe to unwrap
-                                total_size_increase += value.len() as isize - existing.len() as isize;
+                                total_size_increase +=
+                                    value.len() as isize - existing.len() as isize;
                             } else if keys_in_batch.insert(key_bytes) {
                                 // First time seeing this key in the batch.
                                 new_keys_count += 1;
@@ -161,7 +172,10 @@ impl Namespace {
                         errors: Some(vec![BatchError {
                             key: "batch".to_string(),
                             operation: "set_multiple".to_string(),
-                            error_message: format!("Key count limit {} would be exceeded", max_keys),
+                            error_message: format!(
+                                "Key count limit {} would be exceeded",
+                                max_keys
+                            ),
                             index: 0,
                         }]),
                     };
@@ -198,7 +212,8 @@ impl Namespace {
 
                     for (_, key, value) in shard_items {
                         let old_value = data.set_value(key.clone(), value.clone());
-                        operation_results.push((key.clone(), old_value.as_ref().map(|v| (**v).clone())));
+                        operation_results
+                            .push((key.clone(), old_value.as_ref().map(|v| (**v).clone())));
                         if let Some(old) = &old_value {
                             total_size_increase += value.len() as isize - old.len() as isize;
                         } else {
@@ -216,7 +231,11 @@ impl Namespace {
             data: Some(operation_results),
             total_processed: total_items,
             duration: start.elapsed(),
-            errors: if errors.is_empty() { None } else { Some(errors) },
+            errors: if errors.is_empty() {
+                None
+            } else {
+                Some(errors)
+            },
         }
     }
 
@@ -396,7 +415,11 @@ impl Namespace {
             data: Some(items),
             total_processed: total_keys,
             duration: start.elapsed(),
-            errors: if errors.is_empty() { None } else { Some(errors) },
+            errors: if errors.is_empty() {
+                None
+            } else {
+                Some(errors)
+            },
         }
     }
 
@@ -407,7 +430,11 @@ impl Namespace {
     }
 
     /// Deletes multiple keys using binary keys in a single batch operation.
-    pub async fn delete_multiple_bytes(&self, keys: Vec<Vec<u8>>, mode: BatchMode) -> BatchResult<()> {
+    pub async fn delete_multiple_bytes(
+        &self,
+        keys: Vec<Vec<u8>>,
+        mode: BatchMode,
+    ) -> BatchResult<()> {
         let result = self.consume_multiple_bytes(keys, mode).await;
 
         // We don't need the consumed data, just the status of the operation.
@@ -502,7 +529,7 @@ impl Namespace {
                                     ),
                                     index: 0,
                                 }]),
-                            }
+                            };
                         }
                     }
                 }
@@ -586,7 +613,11 @@ impl Namespace {
             data: Some(items),
             total_processed: total_keys,
             duration: start.elapsed(),
-            errors: if errors.is_empty() { None } else { Some(errors) },
+            errors: if errors.is_empty() {
+                None
+            } else {
+                Some(errors)
+            },
         }
     }
 }

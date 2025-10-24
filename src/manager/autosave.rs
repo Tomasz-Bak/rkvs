@@ -116,7 +116,9 @@ impl StorageManager {
 
         let mut tasks = self.autosave_tasks.write().await;
         if tasks.contains_key(namespace_name) {
-            return Err(RkvsError::AutosaveTaskAlreadyExists(namespace_name.to_string()));
+            return Err(RkvsError::AutosaveTaskAlreadyExists(
+                namespace_name.to_string(),
+            ));
         }
 
         let config_guard = self.config.read().await;
@@ -130,7 +132,9 @@ impl StorageManager {
             tasks.insert(namespace_name.to_string(), handle);
             Ok(())
         } else {
-            Err(RkvsError::AutosaveConfigNotFound(namespace_name.to_string()))
+            Err(RkvsError::AutosaveConfigNotFound(
+                namespace_name.to_string(),
+            ))
         }
     }
 
@@ -150,7 +154,10 @@ impl StorageManager {
         if let Some(manager_config) = &config_guard.manager_autosave {
             let mut task_guard = self.manager_autosave_task.write().await;
             if task_guard.is_none() {
-                let manager_task = Self::create_manager_autosave_task(Arc::downgrade(&self), manager_config.clone());
+                let manager_task = Self::create_manager_autosave_task(
+                    Arc::downgrade(&self),
+                    manager_config.clone(),
+                );
                 *task_guard = Some(tokio::spawn(manager_task));
             }
         }
@@ -159,7 +166,8 @@ impl StorageManager {
         let mut tasks = self.autosave_tasks.write().await;
         for ns_config in &config_guard.namespace_autosave {
             if !tasks.contains_key(&ns_config.namespace_name) {
-                let task = Self::create_namespace_autosave_task(Arc::downgrade(&self), ns_config.clone());
+                let task =
+                    Self::create_namespace_autosave_task(Arc::downgrade(&self), ns_config.clone());
                 let handle = tokio::spawn(task);
                 tasks.insert(ns_config.namespace_name.clone(), handle);
             }

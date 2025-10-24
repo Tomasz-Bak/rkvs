@@ -1,4 +1,4 @@
-use rkvs::{namespace::Namespace, BatchMode, NamespaceConfig, Result};
+use rkvs::{BatchMode, NamespaceConfig, Result, namespace::Namespace};
 use std::sync::Arc;
 
 /// Helper to create a default namespace for tests
@@ -111,7 +111,10 @@ async fn test_max_value_size_limit() -> Result<()> {
     let err = ns.set("key2", vec![1, 2, 3, 4, 5, 6]).await;
     assert!(err.is_err());
     if let Err(e) = err {
-        assert!(e.to_string().contains("Value size 6 exceeds maximum allowed size 5"));
+        assert!(
+            e.to_string()
+                .contains("Value size 6 exceeds maximum allowed size 5")
+        );
     }
 
     Ok(())
@@ -182,10 +185,7 @@ async fn test_resize_shards() -> Result<()> {
 #[tokio::test]
 async fn test_batch_set_all_or_nothing() -> Result<()> {
     let ns = create_test_namespace(None);
-    let items = vec![
-        ("key1".to_string(), vec![1]),
-        ("key2".to_string(), vec![2]),
-    ];
+    let items = vec![("key1".to_string(), vec![1]), ("key2".to_string(), vec![2])];
 
     let result = ns.set_multiple(items, BatchMode::AllOrNothing).await;
     assert!(result.errors.is_none());
@@ -203,7 +203,9 @@ async fn test_batch_set_all_or_nothing() -> Result<()> {
         ("keyB".to_string(), vec![2, 3]), // This one will fail
     ];
 
-    let result2 = ns2.set_multiple(failing_items, BatchMode::AllOrNothing).await;
+    let result2 = ns2
+        .set_multiple(failing_items, BatchMode::AllOrNothing)
+        .await;
     assert!(result2.errors.is_some());
     assert!(result2.data.is_none());
 
@@ -253,7 +255,9 @@ async fn test_batch_delete_all_or_nothing() -> Result<()> {
         "key1".to_string(),
         "key3".to_string(), // Does not exist
     ];
-    let result_fail = ns.delete_multiple(keys_to_delete_fail, BatchMode::AllOrNothing).await;
+    let result_fail = ns
+        .delete_multiple(keys_to_delete_fail, BatchMode::AllOrNothing)
+        .await;
     assert!(result_fail.errors.is_some());
 
     // No keys should have been deleted
@@ -262,7 +266,9 @@ async fn test_batch_delete_all_or_nothing() -> Result<()> {
 
     // This batch should succeed
     let keys_to_delete_ok = vec!["key1".to_string(), "key2".to_string()];
-    let result_ok = ns.delete_multiple(keys_to_delete_ok, BatchMode::AllOrNothing).await;
+    let result_ok = ns
+        .delete_multiple(keys_to_delete_ok, BatchMode::AllOrNothing)
+        .await;
     assert!(result_ok.errors.is_none());
 
     // Both keys should be gone

@@ -1,5 +1,5 @@
 //! Contains all configuration-related methods for the `Namespace`.
-use super::{Namespace, RkvsError, Result, DEFAULT_SHARD_CAPACITY};
+use super::{DEFAULT_SHARD_CAPACITY, Namespace, Result, RkvsError};
 use crate::data_table::DataTable;
 use crate::types::NamespaceConfig;
 use std::sync::Arc;
@@ -9,7 +9,9 @@ impl Namespace {
     /// Resizes the namespace to use a new number of shards.
     /// Only supports increasing shard count
     pub async fn resize_shards(&self, new_shard_count: usize) -> Result<()> {
-        let mut shards_guard = self.timeout_write_lock(&self.shards, "resize_shards").await?;
+        let mut shards_guard = self
+            .timeout_write_lock(&self.shards, "resize_shards")
+            .await?;
         let current_shard_count = shards_guard.len();
 
         if new_shard_count <= current_shard_count {
@@ -21,7 +23,11 @@ impl Namespace {
         let num_new_shards = new_shard_count - current_shard_count;
 
         let new_shards: Vec<Arc<RwLock<DataTable>>> = (0..num_new_shards)
-            .map(|_| Arc::new(RwLock::new(DataTable::with_capacity(DEFAULT_SHARD_CAPACITY))))
+            .map(|_| {
+                Arc::new(RwLock::new(DataTable::with_capacity(
+                    DEFAULT_SHARD_CAPACITY,
+                )))
+            })
             .collect();
 
         // Append new shards to existing ones
@@ -106,8 +112,12 @@ impl Namespace {
     pub async fn update_config(&self, new_config: NamespaceConfig) -> Result<()> {
         self.set_max_keys(new_config.max_keys()).await?;
         self.set_max_value_size(new_config.max_value_size()).await?;
-        self.set_lock_timeout(new_config.lock_timeout.load(std::sync::atomic::Ordering::SeqCst))
-            .await?;
+        self.set_lock_timeout(
+            new_config
+                .lock_timeout
+                .load(std::sync::atomic::Ordering::SeqCst),
+        )
+        .await?;
         Ok(())
     }
 }

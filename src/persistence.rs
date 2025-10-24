@@ -5,11 +5,11 @@ use std::sync::Arc;
 use tokio::fs::{self, File};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
+use crate::manager::StorageManager;
 use crate::namespace::Namespace;
 use crate::types::NamespaceSnapshot;
-use crate::{Result, RkvsError};
-use crate::manager::StorageManager;
 use crate::types::StorageConfig;
+use crate::{Result, RkvsError};
 
 /// Provides file-based persistence for the storage manager.
 #[derive(Debug)]
@@ -43,7 +43,10 @@ impl FilePersistence {
             snapshots.insert(name.clone(), ns.create_snapshot().await);
         }
 
-        let full_snapshot = FullStorageSnapshot { namespaces: snapshots, config: manager_config};
+        let full_snapshot = FullStorageSnapshot {
+            namespaces: snapshots,
+            config: manager_config,
+        };
         let bytes = bincode::serialize(&full_snapshot)?;
         let path = self.base_path.join(filename);
         let mut file = File::create(&path).await?;
@@ -52,23 +55,26 @@ impl FilePersistence {
     }
 
     /// Loads a full storage snapshot from a file.
-    pub async fn load_all(&self, filename: &str) -> Result<(HashMap<String, Arc<Namespace>>, StorageConfig)> {
+    pub async fn load_all(
+        &self,
+        filename: &str,
+    ) -> Result<(HashMap<String, Arc<Namespace>>, StorageConfig)> {
         let path = self.base_path.join(filename);
         if !path.exists() {
             return Err(RkvsError::SnapshotNotFound(path.display().to_string()));
         }
-    
+
         let mut file = File::open(&path).await?;
         let mut buffer = Vec::new();
         file.read_to_end(&mut buffer).await?;
-    
+
         let full_snapshot: FullStorageSnapshot = bincode::deserialize(&buffer)?;
         let mut namespaces = HashMap::new();
         for (_, snapshot) in full_snapshot.namespaces {
             let ns = Namespace::from_snapshot(snapshot);
             namespaces.insert(ns.get_metadata().await.name, Arc::new(ns));
         }
-    
+
         Ok((namespaces, full_snapshot.config)) // StorageConfig loading is handled by the manager
     }
 

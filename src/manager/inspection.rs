@@ -1,7 +1,7 @@
 //! Contains all inspection and statistics methods for the `StorageManager`.
 use super::StorageManager;
-use crate::types::{NamespaceStats, StorageConfig};
 use crate::Result;
+use crate::types::{NamespaceStats, StorageConfig};
 use std::sync::atomic::Ordering;
 
 impl StorageManager {

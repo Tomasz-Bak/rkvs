@@ -1,5 +1,5 @@
 //! Contains the `StorageManagerBuilder` for fluently constructing a `StorageManager`.
-use super::{FilePersistence, StorageManager, StorageConfig};
+use super::{FilePersistence, StorageConfig, StorageManager};
 use crate::Result;
 use std::path::PathBuf;
 use std::sync::Arc;

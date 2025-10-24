@@ -1,7 +1,7 @@
-use rkvs::{namespace::Namespace, NamespaceConfig, NamespaceSnapshot, StorageManager};
+use rand::prelude::*;
+use rkvs::{NamespaceConfig, NamespaceSnapshot, StorageManager, namespace::Namespace};
 use serde::Serialize;
 use std::sync::Arc;
-use rand::prelude::*;
 use std::time::{Duration, Instant};
 use tokio::runtime::Runtime;
 
@@ -103,7 +103,10 @@ fn main() {
 }
 
 /// Prepares a snapshot with a given number of keys.
-async fn prepare_snapshot(storage: &Arc<StorageManager>, key_count: usize) -> (NamespaceSnapshot, Vec<String>) {
+async fn prepare_snapshot(
+    storage: &Arc<StorageManager>,
+    key_count: usize,
+) -> (NamespaceSnapshot, Vec<String>) {
     let mut rng = StdRng::from_entropy();
     let random_keys: Vec<String> = (0..key_count)
         .map(|_| format!("key_{}", rng.r#gen::<u64>()))
@@ -112,7 +115,10 @@ async fn prepare_snapshot(storage: &Arc<StorageManager>, key_count: usize) -> (N
     let temp_ns_name = "snapshot_builder_overhead";
     let ns_config = NamespaceConfig::default();
     ns_config.set_shard_count(1); // Always create with 1 shard, then resize
-    storage.create_namespace(temp_ns_name, Some(ns_config)).await.unwrap();
+    storage
+        .create_namespace(temp_ns_name, Some(ns_config))
+        .await
+        .unwrap();
     let ns = storage.namespace(temp_ns_name).await.unwrap();
 
     for key in &random_keys {
@@ -152,7 +158,12 @@ async fn run_get_benchmark(
         let duration = start.elapsed();
         durations.push(duration);
     }
-    print_stats(scenario_name, &mut durations, avg_deviation_percent, results);
+    print_stats(
+        scenario_name,
+        &mut durations,
+        avg_deviation_percent,
+        results,
+    );
 }
 
 /// Measures sequential `set` operations for existing keys (updates).
@@ -187,7 +198,12 @@ async fn run_set_update_benchmark(
         durations.push(duration);
     }
 
-    print_stats(scenario_name, &mut durations, avg_deviation_percent, results);
+    print_stats(
+        scenario_name,
+        &mut durations,
+        avg_deviation_percent,
+        results,
+    );
 }
 
 /// Calculates and prints latency statistics for a set of measurements.
@@ -195,7 +211,8 @@ fn print_stats(
     scenario_name: &str,
     durations: &mut Vec<Duration>,
     avg_deviation_percent: f64,
-    results: &mut Vec<ScenarioResult>) {
+    results: &mut Vec<ScenarioResult>,
+) {
     if durations.is_empty() {
         println!("No measurements recorded for '{}'.", scenario_name);
         return;

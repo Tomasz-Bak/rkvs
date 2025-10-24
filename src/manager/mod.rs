@@ -13,8 +13,8 @@ use super::persistence::FilePersistence;
 use super::types::StorageConfig;
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::sync::atomic::AtomicBool;
 use std::sync::Weak;
+use std::sync::atomic::AtomicBool;
 use tokio::sync::RwLock;
 
 /// Storage manager for key-value storage with namespaces

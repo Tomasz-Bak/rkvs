@@ -1,5 +1,5 @@
 //! RKVS - Rust Key-Value Storage
-//! 
+//!
 //! A high-performance, namespace-based key-value storage system built in Rust.
 //! Provides persistent storage with configurable limits, async operations, and atomic batch processing.
 //!
@@ -85,14 +85,14 @@
 
 pub mod data_table;
 pub mod error;
-pub mod namespace;
 pub mod manager;
+pub mod namespace;
 pub mod persistence;
 pub mod types;
 
 // Re-export commonly used types
-pub use error::{RkvsError, Result};
-pub use types::*;
-pub use namespace::*;
+pub use error::{Result, RkvsError};
 pub use manager::*;
+pub use namespace::*;
 pub use persistence::*;
+pub use types::*;

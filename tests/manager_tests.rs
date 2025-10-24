@@ -1,4 +1,4 @@
-use rkvs::{Result, StorageManager, NamespaceConfig, StorageConfig};
+use rkvs::{NamespaceConfig, Result, StorageConfig, StorageManager};
 
 #[tokio::test]
 async fn test_uninitialized_error() -> Result<()> {
@@ -57,7 +57,9 @@ async fn test_create_namespace_with_config() -> Result<()> {
     config.set_max_keys(1234);
     config.set_shard_count(10);
 
-    storage.create_namespace_with_config("configured_ns", config).await?;
+    storage
+        .create_namespace_with_config("configured_ns", config)
+        .await?;
 
     let ns = storage.namespace("configured_ns").await?;
     let ns_config = ns.get_config().await;
@@ -94,7 +96,8 @@ async fn test_max_namespaces_limit() -> Result<()> {
 
     let storage = StorageManager::builder()
         .with_config(storage_config)
-        .build().await?;
+        .build()
+        .await?;
     storage.initialize(None).await?;
 
     // Create two namespaces, which should succeed
@@ -105,7 +108,10 @@ async fn test_max_namespaces_limit() -> Result<()> {
     let err = storage.create_namespace("ns3", None).await;
     assert!(err.is_err());
     if let Err(e) = err {
-        assert!(e.to_string().contains("Maximum number of namespaces (2) reached"));
+        assert!(
+            e.to_string()
+                .contains("Maximum number of namespaces (2) reached")
+        );
     }
 
     Ok(())
@@ -143,7 +149,8 @@ async fn test_get_and_update_storage_config() -> Result<()> {
 
     let storage = StorageManager::builder()
         .with_config(original_config.clone())
-        .build().await?;
+        .build()
+        .await?;
     storage.initialize(None).await?;
 
     // Check initial config
@@ -192,8 +199,16 @@ async fn test_statistics() -> Result<()> {
     // Test all stats
     let all_stats = storage.get_all_namespace_stats().await?;
     assert_eq!(all_stats.len(), 2);
-    assert!(all_stats.iter().any(|s| s.name == "ns1" && s.key_count == 2));
-    assert!(all_stats.iter().any(|s| s.name == "ns2" && s.key_count == 1));
+    assert!(
+        all_stats
+            .iter()
+            .any(|s| s.name == "ns1" && s.key_count == 2)
+    );
+    assert!(
+        all_stats
+            .iter()
+            .any(|s| s.name == "ns2" && s.key_count == 1)
+    );
 
     Ok(())
 }

@@ -1,10 +1,10 @@
-use rkvs::{namespace::Namespace, BatchMode, NamespaceConfig, NamespaceSnapshot, StorageManager};
+use futures::future::join_all;
+use rand::prelude::*;
+use rkvs::{BatchMode, NamespaceConfig, NamespaceSnapshot, StorageManager, namespace::Namespace};
 use serde::Serialize;
 use std::sync::Arc;
-use rand::prelude::*;
 use std::time::{Duration, Instant};
 use tokio::runtime::Runtime;
-use futures::future::join_all;
 
 const TOTAL_BATCH_OPERATIONS: usize = 10_000; // Number of batch ops to run per scenario
 const VALUE_SIZE: usize = 256;
@@ -29,7 +29,10 @@ fn main() {
 
         for &shard_count in &shard_counts {
             println!("\n==================================================");
-            println!("  RUNNING CONCURRENT BATCH BENCHMARKS FOR {} SHARD(S)", shard_count);
+            println!(
+                "  RUNNING CONCURRENT BATCH BENCHMARKS FOR {} SHARD(S)",
+                shard_count
+            );
             println!("==================================================");
 
             let ns = Arc::new(Namespace::from_snapshot(snapshot_100k.clone()));
@@ -40,7 +43,11 @@ fn main() {
             for &concurrency in &concurrency_levels {
                 for &batch_size in &batch_sizes {
                     for &mode in &modes {
-                        let mode_str = if mode == BatchMode::AllOrNothing { "AllOrNothing" } else { "BestEffort" };
+                        let mode_str = if mode == BatchMode::AllOrNothing {
+                            "AllOrNothing"
+                        } else {
+                            "BestEffort"
+                        };
 
                         // --- Batch Set ---
                         let scenario_name = format!(
@@ -55,7 +62,8 @@ fn main() {
                             batch_size,
                             mode,
                             &mut all_results,
-                        ).await;
+                        )
+                        .await;
 
                         // --- Batch Get ---
                         let scenario_name = format!(
@@ -71,7 +79,8 @@ fn main() {
                             batch_size,
                             mode,
                             &mut all_results,
-                        ).await;
+                        )
+                        .await;
 
                         // --- Batch Delete ---
                         let scenario_name = format!(
@@ -87,7 +96,8 @@ fn main() {
                             batch_size,
                             mode,
                             &mut all_results,
-                        ).await;
+                        )
+                        .await;
                     }
                 }
             }
@@ -96,13 +106,20 @@ fn main() {
         let output_dir = "assets/benchmarks";
         std::fs::create_dir_all(output_dir).unwrap();
         let results_json = serde_json::to_string_pretty(&all_results).unwrap();
-        let output_path = std::path::Path::new(output_dir).join("batch_concurrent_bench_results.json");
+        let output_path =
+            std::path::Path::new(output_dir).join("batch_concurrent_bench_results.json");
         std::fs::write(&output_path, results_json).unwrap();
-        println!("\n✅ Concurrent batch benchmark results saved to {}", output_path.display());
+        println!(
+            "\n✅ Concurrent batch benchmark results saved to {}",
+            output_path.display()
+        );
     });
 }
 
-async fn prepare_snapshot(storage: &Arc<StorageManager>, key_count: usize) -> (NamespaceSnapshot, Vec<String>) {
+async fn prepare_snapshot(
+    storage: &Arc<StorageManager>,
+    key_count: usize,
+) -> (NamespaceSnapshot, Vec<String>) {
     let mut rng = StdRng::from_entropy();
     let random_keys: Vec<String> = (0..key_count)
         .map(|_| format!("key_{}", rng.r#gen::<u64>()))
@@ -111,7 +128,10 @@ async fn prepare_snapshot(storage: &Arc<StorageManager>, key_count: usize) -> (N
     let temp_ns_name = "snapshot_builder_batch_concurrent";
     let ns_config = NamespaceConfig::default();
     ns_config.set_shard_count(1);
-    storage.create_namespace(temp_ns_name, Some(ns_config)).await.unwrap();
+    storage
+        .create_namespace(temp_ns_name, Some(ns_config))
+        .await
+        .unwrap();
     let ns = storage.namespace(temp_ns_name).await.unwrap();
 
     for key in &random_keys {
@@ -157,15 +177,23 @@ async fn run_concurrent_set_benchmark(
                 let result = ns_clone.set_multiple(batch.clone(), mode).await;
                 let duration = start.elapsed();
 
-                if result.errors.is_some() { panic!("Batch set failed: {:?}", result.errors); }
+                if result.errors.is_some() {
+                    panic!("Batch set failed: {:?}", result.errors);
+                }
 
                 // Cleanup outside of timing
-                ns_clone.delete_multiple(keys_to_delete, BatchMode::BestEffort).await;
-                
+                ns_clone
+                    .delete_multiple(keys_to_delete, BatchMode::BestEffort)
+                    .await;
+
                 duration
             }));
         }
-        let durations: Vec<Duration> = join_all(handles).await.into_iter().map(|res| res.unwrap()).collect();
+        let durations: Vec<Duration> = join_all(handles)
+            .await
+            .into_iter()
+            .map(|res| res.unwrap())
+            .collect();
         all_durations.extend(durations);
     }
     print_stats(scenario_name, &mut all_durations, batch_size, results);
@@ -190,16 +218,24 @@ async fn run_concurrent_get_benchmark(
         for j in 0..concurrency_level {
             let ns_clone = ns.clone();
             let start_index = (i * concurrency_level + j) * batch_size;
-            let batch: Vec<String> = (0..batch_size).map(|k| keys_to_use[(start_index + k) % keys_to_use.len()].clone()).collect();
-            
+            let batch: Vec<String> = (0..batch_size)
+                .map(|k| keys_to_use[(start_index + k) % keys_to_use.len()].clone())
+                .collect();
+
             handles.push(tokio::spawn(async move {
                 let start = Instant::now();
                 let result = ns_clone.get_multiple(batch, mode).await;
-                if result.errors.is_some() { panic!("Batch get failed: {:?}", result.errors); }
+                if result.errors.is_some() {
+                    panic!("Batch get failed: {:?}", result.errors);
+                }
                 start.elapsed()
             }));
         }
-        let durations: Vec<Duration> = join_all(handles).await.into_iter().map(|res| res.unwrap()).collect();
+        let durations: Vec<Duration> = join_all(handles)
+            .await
+            .into_iter()
+            .map(|res| res.unwrap())
+            .collect();
         all_durations.extend(durations);
     }
     print_stats(scenario_name, &mut all_durations, batch_size, results);
@@ -224,30 +260,51 @@ async fn run_concurrent_delete_benchmark(
         for j in 0..concurrency_level {
             let ns_clone = ns.clone();
             let start_index = (i * concurrency_level + j) * batch_size;
-            let batch: Vec<String> = (0..batch_size).map(|k| keys_to_use[(start_index + k) % keys_to_use.len()].clone()).collect();
+            let batch: Vec<String> = (0..batch_size)
+                .map(|k| keys_to_use[(start_index + k) % keys_to_use.len()].clone())
+                .collect();
             let mut rng = thread_rng();
-            let items_to_restore: Vec<(String, Vec<u8>)> = batch.clone().into_iter().map(|key| (key, (0..VALUE_SIZE).map(|_| rng.r#gen()).collect())).collect();
-            
+            let items_to_restore: Vec<(String, Vec<u8>)> = batch
+                .clone()
+                .into_iter()
+                .map(|key| (key, (0..VALUE_SIZE).map(|_| rng.r#gen()).collect()))
+                .collect();
+
             handles.push(tokio::spawn(async move {
                 let start = Instant::now();
                 let result = ns_clone.delete_multiple(batch, mode).await;
-                if result.errors.is_some() { panic!("Batch delete failed: {:?}", result.errors); }
+                if result.errors.is_some() {
+                    panic!("Batch delete failed: {:?}", result.errors);
+                }
                 let duration = start.elapsed();
 
                 // Restore keys
-                ns_clone.set_multiple(items_to_restore, BatchMode::BestEffort).await;
+                ns_clone
+                    .set_multiple(items_to_restore, BatchMode::BestEffort)
+                    .await;
 
                 duration
             }));
         }
-        let durations: Vec<Duration> = join_all(handles).await.into_iter().map(|res| res.unwrap()).collect();
+        let durations: Vec<Duration> = join_all(handles)
+            .await
+            .into_iter()
+            .map(|res| res.unwrap())
+            .collect();
         all_durations.extend(durations);
     }
     print_stats(scenario_name, &mut all_durations, batch_size, results);
 }
 
-fn print_stats(scenario_name: &str, durations: &mut Vec<Duration>, batch_size: usize, results: &mut Vec<ScenarioResult>) {
-    if durations.is_empty() { return; }
+fn print_stats(
+    scenario_name: &str,
+    durations: &mut Vec<Duration>,
+    batch_size: usize,
+    results: &mut Vec<ScenarioResult>,
+) {
+    if durations.is_empty() {
+        return;
+    }
     durations.sort();
 
     let total_op_duration: Duration = durations.iter().sum();

@@ -1,7 +1,7 @@
-use rkvs::{namespace::Namespace, NamespaceConfig, NamespaceSnapshot, StorageManager};
+use rand::prelude::*;
+use rkvs::{NamespaceConfig, NamespaceSnapshot, StorageManager, namespace::Namespace};
 use serde::Serialize;
 use std::sync::Arc;
-use rand::prelude::*;
 use std::time::{Duration, Instant};
 use tokio::runtime::Runtime;
 
@@ -28,14 +28,18 @@ fn main() {
         let results_json = serde_json::to_string_pretty(&all_results).unwrap();
         let output_path = std::path::Path::new(output_dir).join("operations_bench_results.json");
         std::fs::write(&output_path, results_json).unwrap();
-        println!("\n✅ Sequential operations benchmark results saved to {}", output_path.display());
+        println!(
+            "\n✅ Sequential operations benchmark results saved to {}",
+            output_path.display()
+        );
     });
 }
 
 /// Helper to run the full set of benchmarks for a given shard configuration.
 async fn run_all_scenarios_for_config(
     storage: &Arc<StorageManager>,
-    results: &mut Vec<ScenarioResult>) {
+    results: &mut Vec<ScenarioResult>,
+) {
     println!("\n==================================================");
     println!("  RUNNING SEQUENTIAL BENCHMARKS (1 SHARD)");
     println!("==================================================");
@@ -53,7 +57,10 @@ async fn run_all_scenarios_for_config(
         let temp_ns_name = "snapshot_builder_ops";
         let ns_config = NamespaceConfig::default();
         ns_config.set_shard_count(1); // Hardcode to 1 shard for this benchmark
-        storage.create_namespace(temp_ns_name, Some(ns_config)).await.unwrap();
+        storage
+            .create_namespace(temp_ns_name, Some(ns_config))
+            .await
+            .unwrap();
         let ns = storage.namespace(temp_ns_name).await.unwrap();
 
         // Snapshot 1: 1k keys
@@ -112,10 +119,26 @@ async fn run_all_scenarios_for_config(
         }
 
         let scenarios = [
-            Bench { name: "1k-key Namespace", snapshot: snapshot_1k, keys: &random_keys[0..1_000] },
-            Bench { name: "10k-key Namespace", snapshot: snapshot_10k, keys: &random_keys[0..10_000] },
-            Bench { name: "100k-key Namespace", snapshot: snapshot_100k, keys: &random_keys[0..100_000] },
-            Bench { name: "1M-key Namespace", snapshot: snapshot_1m, keys: &random_keys },
+            Bench {
+                name: "1k-key Namespace",
+                snapshot: snapshot_1k,
+                keys: &random_keys[0..1_000],
+            },
+            Bench {
+                name: "10k-key Namespace",
+                snapshot: snapshot_10k,
+                keys: &random_keys[0..10_000],
+            },
+            Bench {
+                name: "100k-key Namespace",
+                snapshot: snapshot_100k,
+                keys: &random_keys[0..100_000],
+            },
+            Bench {
+                name: "1M-key Namespace",
+                snapshot: snapshot_1m,
+                keys: &random_keys,
+            },
         ];
 
         for bench in &scenarios {
@@ -124,7 +147,8 @@ async fn run_all_scenarios_for_config(
                 bench.snapshot.clone(),
                 ITERATIONS_PER_SCENARIO,
                 results,
-            ).await;
+            )
+            .await;
 
             run_set_update_benchmark_sequential(
                 &format!("Sequential Set (Update) on {}", bench.name),
@@ -132,7 +156,8 @@ async fn run_all_scenarios_for_config(
                 bench.keys,
                 ITERATIONS_PER_SCENARIO,
                 results,
-            ).await;
+            )
+            .await;
 
             run_update_benchmark_sequential(
                 &format!("Sequential Update on {}", bench.name),
@@ -140,7 +165,8 @@ async fn run_all_scenarios_for_config(
                 bench.keys,
                 ITERATIONS_PER_SCENARIO,
                 results,
-            ).await;
+            )
+            .await;
 
             run_get_benchmark_sequential(
                 &format!("Sequential Get on {}", bench.name),
@@ -148,7 +174,8 @@ async fn run_all_scenarios_for_config(
                 bench.keys,
                 ITERATIONS_PER_SCENARIO,
                 results,
-            ).await;
+            )
+            .await;
 
             run_exists_benchmark_sequential(
                 &format!("Sequential Exists on {}", bench.name),
@@ -156,7 +183,8 @@ async fn run_all_scenarios_for_config(
                 bench.keys,
                 ITERATIONS_PER_SCENARIO,
                 results,
-            ).await;
+            )
+            .await;
 
             run_delete_benchmark_sequential(
                 &format!("Sequential Delete on {}", bench.name),
@@ -164,7 +192,8 @@ async fn run_all_scenarios_for_config(
                 bench.keys,
                 ITERATIONS_PER_SCENARIO,
                 results,
-            ).await;
+            )
+            .await;
 
             run_consume_benchmark_sequential(
                 &format!("Sequential Consume on {}", bench.name),
@@ -172,7 +201,8 @@ async fn run_all_scenarios_for_config(
                 bench.keys,
                 ITERATIONS_PER_SCENARIO,
                 results,
-            ).await;
+            )
+            .await;
         }
     }
 }
@@ -413,7 +443,11 @@ async fn run_consume_benchmark_sequential(
 }
 
 /// Calculates and prints latency statistics for a set of measurements.
-fn print_stats(scenario_name: &str, durations: &mut Vec<Duration>, results: &mut Vec<ScenarioResult>) {
+fn print_stats(
+    scenario_name: &str,
+    durations: &mut Vec<Duration>,
+    results: &mut Vec<ScenarioResult>,
+) {
     if durations.is_empty() {
         println!("No measurements recorded for '{}'.", scenario_name);
         return;

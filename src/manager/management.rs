@@ -10,7 +10,11 @@ impl StorageManager {
     ///
     /// Creates a new namespace with the given name and optional configuration.
     /// If no configuration is provided, `NamespaceConfig::default()` is used.
-    pub async fn create_namespace(&self, name: &str, config: Option<NamespaceConfig>) -> Result<()> {
+    pub async fn create_namespace(
+        &self,
+        name: &str,
+        config: Option<NamespaceConfig>,
+    ) -> Result<()> {
         self.ensure_initialized().await?;
 
         let mut namespaces = self.namespaces.write().await;

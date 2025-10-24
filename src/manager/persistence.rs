@@ -1,9 +1,9 @@
 //! Contains all persistence and lifecycle methods for the `StorageManager`.
 use super::StorageManager;
-use crate::namespace::Namespace;
 use crate::Result;
-use std::sync::atomic::Ordering;
+use crate::namespace::Namespace;
 use std::sync::Arc;
+use std::sync::atomic::Ordering;
 
 impl StorageManager {
     /// Initializes storage (call this once at startup).
@@ -78,7 +78,9 @@ impl StorageManager {
     pub async fn load_namespace(&self, filename: &str) -> Result<String> {
         self.ensure_initialized().await?;
 
-        let persistence = self.persistence.as_ref()
+        let persistence = self
+            .persistence
+            .as_ref()
             .ok_or(crate::RkvsError::PersistenceNotEnabled)?;
 
         // Load the snapshot data from the file
@@ -119,7 +121,9 @@ impl StorageManager {
     pub async fn load_namespace_with_name(&self, filename: &str, new_name: &str) -> Result<String> {
         self.ensure_initialized().await?;
 
-        let persistence = self.persistence.as_ref()
+        let persistence = self
+            .persistence
+            .as_ref()
             .ok_or(crate::RkvsError::PersistenceNotEnabled)?;
 
         // Load the snapshot data from the file and update its name
@@ -133,7 +137,9 @@ impl StorageManager {
         let config_guard = self.config.read().await;
 
         if namespaces.contains_key(new_name) {
-            return Err(crate::RkvsError::NamespaceAlreadyExists(new_name.to_string()));
+            return Err(crate::RkvsError::NamespaceAlreadyExists(
+                new_name.to_string(),
+            ));
         }
 
         if let Some(max) = config_guard.max_namespaces {

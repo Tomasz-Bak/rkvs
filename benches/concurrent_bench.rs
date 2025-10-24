@@ -1,10 +1,10 @@
-use rkvs::{namespace::Namespace, NamespaceConfig, NamespaceSnapshot, StorageManager};
+use futures::future::join_all;
+use rand::prelude::*;
+use rkvs::{NamespaceConfig, NamespaceSnapshot, StorageManager, namespace::Namespace};
 use serde::Serialize;
 use std::sync::Arc;
-use rand::prelude::*;
 use std::time::{Duration, Instant};
 use tokio::runtime::Runtime;
-use futures::future::join_all;
 
 const TOTAL_OPERATIONS: usize = 5_000_000;
 const VALUE_SIZE: usize = 256; // 256 bytes
@@ -59,7 +59,8 @@ fn main() {
                         concurrency,
                         read_ratio,
                         &mut all_results,
-                    ).await;
+                    )
+                    .await;
                 }
             }
         }
@@ -70,12 +71,18 @@ fn main() {
         let results_json = serde_json::to_string_pretty(&all_results).unwrap();
         let output_path = std::path::Path::new(output_dir).join("concurrent_bench_results.json");
         std::fs::write(&output_path, results_json).unwrap();
-        println!("\n✅ Concurrent benchmark results saved to {}", output_path.display());
+        println!(
+            "\n✅ Concurrent benchmark results saved to {}",
+            output_path.display()
+        );
     });
 }
 
 /// Prepares a snapshot with a given number of keys.
-async fn prepare_snapshot(storage: &Arc<StorageManager>, key_count: usize) -> (NamespaceSnapshot, Vec<String>) {
+async fn prepare_snapshot(
+    storage: &Arc<StorageManager>,
+    key_count: usize,
+) -> (NamespaceSnapshot, Vec<String>) {
     let mut rng = StdRng::from_entropy();
     let random_keys: Vec<String> = (0..key_count)
         .map(|_| format!("key_{}", rng.r#gen::<u64>()))
@@ -85,7 +92,10 @@ async fn prepare_snapshot(storage: &Arc<StorageManager>, key_count: usize) -> (N
     let ns_config = NamespaceConfig::default();
     // Always create the base snapshot with a single shard for consistency.
     ns_config.set_shard_count(1);
-    storage.create_namespace(temp_ns_name, Some(ns_config)).await.unwrap();
+    storage
+        .create_namespace(temp_ns_name, Some(ns_config))
+        .await
+        .unwrap();
     let ns = storage.namespace(temp_ns_name).await.unwrap();
 
     for key in &random_keys {
@@ -137,7 +147,7 @@ async fn run_mixed_workload_benchmark(
         // Spawn write tasks (updates)
         for _ in 0..num_write_ops {
             // Generate the random key on the current thread before spawning.
-            let mut rng = thread_rng(); 
+            let mut rng = thread_rng();
             let value: Vec<u8> = (0..VALUE_SIZE).map(|_| rng.r#gen()).collect();
             let key = keys_to_use[rng.r#gen_range(0..keys_to_use.len())].clone();
             let ns_clone = ns.clone();
@@ -149,7 +159,11 @@ async fn run_mixed_workload_benchmark(
             }));
         }
 
-        let durations: Vec<Duration> = join_all(handles).await.into_iter().map(|res| res.unwrap()).collect();
+        let durations: Vec<Duration> = join_all(handles)
+            .await
+            .into_iter()
+            .map(|res| res.unwrap())
+            .collect();
         all_durations.extend(durations);
     }
 
@@ -161,10 +175,12 @@ async fn run_mixed_workload_benchmark(
 }
 
 /// Calculates and prints latency statistics for a set of measurements.
-fn print_stats(scenario_name: &str, 
-    durations: &mut Vec<Duration>, 
+fn print_stats(
+    scenario_name: &str,
+    durations: &mut Vec<Duration>,
     ops_per_sec: f64,
-    results: &mut Vec<ScenarioResult>) {
+    results: &mut Vec<ScenarioResult>,
+) {
     if durations.is_empty() {
         println!("No measurements recorded for '{}'.", scenario_name);
         return;

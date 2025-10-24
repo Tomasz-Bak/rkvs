@@ -1,6 +1,6 @@
 //! Defines the primary public data structures and configuration types for the crate.
-use serde::{Serialize, Deserialize};
 use crate::data_table::DataTable;
+use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
 
@@ -58,31 +58,31 @@ impl NamespaceConfig {
     pub fn max_keys(&self) -> usize {
         self.max_keys.load(Ordering::Relaxed)
     }
-    
+
     pub fn max_value_size(&self) -> usize {
         self.max_value_size.load(Ordering::Relaxed)
     }
-    
+
     pub fn shard_count(&self) -> usize {
         self.shard_count.load(Ordering::Relaxed)
     }
-    
+
     pub fn lock_timeout(&self) -> Duration {
         Duration::from_millis(self.lock_timeout.load(Ordering::Relaxed) as u64)
     }
-    
+
     pub fn set_max_keys(&self, value: usize) {
         self.max_keys.store(value, Ordering::Relaxed)
     }
-    
+
     pub fn set_max_value_size(&self, value: usize) {
         self.max_value_size.store(value, Ordering::Relaxed)
     }
-    
+
     pub fn set_shard_count(&self, value: usize) {
         self.shard_count.store(value, Ordering::Relaxed)
     }
-    
+
     pub fn set_lock_timeout(&self, value_ms: usize) {
         self.lock_timeout.store(value_ms, Ordering::Relaxed)
     }
@@ -104,8 +104,8 @@ impl Default for NamespaceConfig {
         Self {
             max_keys: 0.into(),
             max_value_size: 0.into(),
-            shard_count: 4.into(),           // Default to 4 shards
-            lock_timeout: 500.into(),        // Default lock timeout of 500ms
+            shard_count: 4.into(),    // Default to 4 shards
+            lock_timeout: 500.into(), // Default lock timeout of 500ms
         }
     }
 }
@@ -147,7 +147,8 @@ impl NamespaceMetadata {
         if diff > 0 {
             self.key_count.fetch_add(diff as usize, Ordering::Relaxed);
         } else if diff < 0 {
-            self.key_count.fetch_sub(diff.abs() as usize, Ordering::Relaxed);
+            self.key_count
+                .fetch_sub(diff.abs() as usize, Ordering::Relaxed);
         }
     }
 
@@ -163,7 +164,8 @@ impl NamespaceMetadata {
         if diff > 0 {
             self.total_size.fetch_add(diff as usize, Ordering::Relaxed);
         } else if diff < 0 {
-            self.total_size.fetch_sub(diff.abs() as usize, Ordering::Relaxed);
+            self.total_size
+                .fetch_sub(diff.abs() as usize, Ordering::Relaxed);
         }
     }
 

@@ -1,7 +1,7 @@
-use rkvs::{namespace::Namespace, BatchMode, NamespaceConfig, NamespaceSnapshot, StorageManager};
+use rand::prelude::*;
+use rkvs::{BatchMode, NamespaceConfig, NamespaceSnapshot, StorageManager, namespace::Namespace};
 use serde::Serialize;
 use std::sync::Arc;
-use rand::prelude::*;
 use std::time::{Duration, Instant};
 use tokio::runtime::Runtime;
 
@@ -21,16 +21,21 @@ fn main() {
         let output_dir = "assets/benchmarks";
         std::fs::create_dir_all(output_dir).unwrap();
         let results_json = serde_json::to_string_pretty(&all_results).unwrap();
-        let output_path = std::path::Path::new(output_dir).join("batch_operations_bench_results.json");
+        let output_path =
+            std::path::Path::new(output_dir).join("batch_operations_bench_results.json");
         std::fs::write(&output_path, results_json).unwrap();
-        println!("\n✅ Batch operations benchmark results saved to {}", output_path.display());
+        println!(
+            "\n✅ Batch operations benchmark results saved to {}",
+            output_path.display()
+        );
     });
 }
 
 /// Helper to run the full set of benchmarks for a given shard configuration.
 async fn run_all_scenarios_for_config(
     storage: &Arc<StorageManager>,
-    results: &mut Vec<ScenarioResult>) {
+    results: &mut Vec<ScenarioResult>,
+) {
     // Prepare snapshots and keys
     println!("Preparing random keys and namespace snapshots for different data scales...");
     let mut rng = StdRng::from_entropy();
@@ -41,7 +46,10 @@ async fn run_all_scenarios_for_config(
     let temp_ns_name = "snapshot_builder_batch_ops";
     let ns_config = NamespaceConfig::default();
     ns_config.set_shard_count(1);
-    storage.create_namespace(temp_ns_name, Some(ns_config)).await.unwrap();
+    storage
+        .create_namespace(temp_ns_name, Some(ns_config))
+        .await
+        .unwrap();
     let ns = storage.namespace(temp_ns_name).await.unwrap();
 
     for i in 0..100_000 {
@@ -59,40 +67,59 @@ async fn run_all_scenarios_for_config(
 
     for &batch_size in &batch_sizes {
         println!("\n==================================================");
-        println!("  RUNNING BATCH BENCHMARKS (1 SHARD, BATCH SIZE {})", batch_size);
+        println!(
+            "  RUNNING BATCH BENCHMARKS (1 SHARD, BATCH SIZE {})",
+            batch_size
+        );
         println!("==================================================");
 
         for &mode in &modes {
-            let mode_str = if mode == BatchMode::AllOrNothing { "AllOrNothing" } else { "BestEffort" };
+            let mode_str = if mode == BatchMode::AllOrNothing {
+                "AllOrNothing"
+            } else {
+                "BestEffort"
+            };
 
             run_set_multiple_benchmark(
-                &format!("Batch Set (Size {}) ({}) on 100k-key Namespace", batch_size, mode_str),
+                &format!(
+                    "Batch Set (Size {}) ({}) on 100k-key Namespace",
+                    batch_size, mode_str
+                ),
                 snapshot_100k.clone(),
                 ITERATIONS_PER_SCENARIO,
                 batch_size,
                 mode,
                 results,
-            ).await;
+            )
+            .await;
 
             run_get_multiple_benchmark(
-                &format!("Batch Get (Size {}) ({}) on 100k-key Namespace", batch_size, mode_str),
+                &format!(
+                    "Batch Get (Size {}) ({}) on 100k-key Namespace",
+                    batch_size, mode_str
+                ),
                 snapshot_100k.clone(),
                 &random_keys,
                 ITERATIONS_PER_SCENARIO,
                 batch_size,
                 mode,
                 results,
-            ).await;
+            )
+            .await;
 
             run_delete_multiple_benchmark(
-                &format!("Batch Delete (Size {}) ({}) on 100k-key Namespace", batch_size, mode_str),
+                &format!(
+                    "Batch Delete (Size {}) ({}) on 100k-key Namespace",
+                    batch_size, mode_str
+                ),
                 snapshot_100k.clone(),
                 &random_keys,
                 ITERATIONS_PER_SCENARIO,
                 batch_size,
                 mode,
                 results,
-            ).await;
+            )
+            .await;
         }
     }
 }
@@ -134,7 +161,8 @@ async fn run_set_multiple_benchmark(
 
         // Cleanup outside of timing
         let keys_to_delete: Vec<String> = batch.into_iter().map(|(k, _)| k).collect();
-        ns.delete_multiple(keys_to_delete, BatchMode::BestEffort).await;
+        ns.delete_multiple(keys_to_delete, BatchMode::BestEffort)
+            .await;
     }
 
     print_stats(scenario_name, &mut durations, batch_size, results);
@@ -214,13 +242,15 @@ async fn run_delete_multiple_benchmark(
 
         // Restore the deleted keys to maintain DB size
         let mut rng = StdRng::from_entropy();
-        let items_to_restore: Vec<(String, Vec<u8>)> = batch.into_iter()
+        let items_to_restore: Vec<(String, Vec<u8>)> = batch
+            .into_iter()
             .map(|key| {
                 let value: Vec<u8> = (0..VALUE_SIZE).map(|_| rng.r#gen()).collect();
                 (key, value)
             })
             .collect();
-        ns.set_multiple(items_to_restore, BatchMode::BestEffort).await;
+        ns.set_multiple(items_to_restore, BatchMode::BestEffort)
+            .await;
     }
 
     print_stats(scenario_name, &mut durations, batch_size, results);
