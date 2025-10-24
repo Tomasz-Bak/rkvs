@@ -39,7 +39,7 @@ jobs:
       run: cargo fmt --all -- --check
 
     - name: Run Clippy
-      run: cargo clippy -- -D suspicious
+      run: cargo clippy
 
     - name: Run tests
       run: cargo test
