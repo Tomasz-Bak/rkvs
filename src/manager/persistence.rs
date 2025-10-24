@@ -63,9 +63,7 @@ impl StorageManager {
             persistence.save_snapshot(&snapshot, filename).await?;
             Ok(())
         } else {
-            Err(crate::RkvsError::Storage(
-                "Persistence is not enabled.".to_string(),
-            ))
+            Err(crate::RkvsError::PersistenceNotEnabled)
         }
     }
 
@@ -80,9 +78,8 @@ impl StorageManager {
     pub async fn load_namespace(&self, filename: &str) -> Result<String> {
         self.ensure_initialized().await?;
 
-        let persistence = self.persistence.as_ref().ok_or_else(|| {
-            crate::RkvsError::Storage("Persistence is not enabled.".to_string())
-        })?;
+        let persistence = self.persistence.as_ref()
+            .ok_or(crate::RkvsError::PersistenceNotEnabled)?;
 
         // Load the snapshot data from the file
         let snapshot = persistence.load_snapshot(filename).await?;
@@ -96,19 +93,13 @@ impl StorageManager {
 
         // Check if the namespace already exists
         if namespaces.contains_key(&namespace_name) {
-            return Err(crate::RkvsError::Storage(format!(
-                "Namespace '{}' already exists",
-                namespace_name
-            )));
+            return Err(crate::RkvsError::NamespaceAlreadyExists(namespace_name));
         }
 
         // Check if we've reached the max namespaces limit
         if let Some(max) = config_guard.max_namespaces {
             if namespaces.len() >= max {
-                return Err(crate::RkvsError::Storage(format!(
-                    "Maximum number of namespaces ({}) reached",
-                    max
-                )));
+                return Err(crate::RkvsError::MaxNamespacesReached(max));
             }
         }
 
@@ -128,9 +119,8 @@ impl StorageManager {
     pub async fn load_namespace_with_name(&self, filename: &str, new_name: &str) -> Result<String> {
         self.ensure_initialized().await?;
 
-        let persistence = self.persistence.as_ref().ok_or_else(|| {
-            crate::RkvsError::Storage("Persistence is not enabled.".to_string())
-        })?;
+        let persistence = self.persistence.as_ref()
+            .ok_or(crate::RkvsError::PersistenceNotEnabled)?;
 
         // Load the snapshot data from the file and update its name
         let mut snapshot = persistence.load_snapshot(filename).await?;
@@ -143,18 +133,12 @@ impl StorageManager {
         let config_guard = self.config.read().await;
 
         if namespaces.contains_key(new_name) {
-            return Err(crate::RkvsError::Storage(format!(
-                "Namespace '{}' already exists",
-                new_name
-            )));
+            return Err(crate::RkvsError::NamespaceAlreadyExists(new_name.to_string()));
         }
 
         if let Some(max) = config_guard.max_namespaces {
             if namespaces.len() >= max {
-                return Err(crate::RkvsError::Storage(format!(
-                    "Maximum number of namespaces ({}) reached",
-                    max
-                )));
+                return Err(crate::RkvsError::MaxNamespacesReached(max));
             }
         }
 

@@ -1,6 +1,7 @@
 [![Crates.io](https://img.shields.io/crates/v/rkvs.svg)](https://crates.io/crates/rkvs)
 [![Documentation](https://docs.rs/rkvs/badge.svg)](https://docs.rs/rkvs)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/Tomasz-Bak/rkvs/ci.yml?branch=main)](https://github.com/Tomasz-Bak/rkvs/actions?query=workflow%3A%22Rust+CI%22+branch%3Amain)
 # RKVS - Rust Key-Value Storage
 
 RKVS is a high-performance, in-memory, asynchronous key-value storage library for Rust. It is designed for concurrent applications and provides a thread-safe API built on Tokio.
@@ -223,29 +224,6 @@ The benchmarks are located in the `benches/` directory and can be run using `car
 
 Running a benchmark will produce a `.json` result file in the `assets/benchmarks/` directory.
 
-## Migration Guide
-
-### Upgrading from v0.1.0 to v0.2.0
-
-The main breaking change is the switch from hash-based namespace identifiers to string-based namespace IDs:
-
-**Before (v0.1.0):**
-```rust
-let ns_hash = storage.create_namespace("my_app", Some(config)).await?;
-let namespace = storage.namespace(ns_hash).await?;  // ns_hash was [u8; 32]
-```
-
-**After (v0.2.0):**
-```rust
-storage.create_namespace("my_app", Some(config)).await?;
-storage.namespace("my_app").await?;  // namespace_id is String
-```
-**Key Changes:**
-- `create_namespace()` now returns Ok(()) or Err() instead of `[u8; 32]`
-- `namespace()` method now takes `&str` instead of `[u8; 32]`
-- All other methods (`delete_namespace`, `get_namespace_stats`, etc.) now use `&str` for namespace identification
-- No more manual hash conversion needed 
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](https://opensource.org/licenses/MIT) file for details.
@@ -256,7 +234,17 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Changelog
 
-### v0.3.1 (Latest)
+
+### v0.4.0
+- **Breaking Change**: Refactored `RkvsError` to use specific, structured error variants instead of generic strings. This improves error handling but requires updates to any code that matches on error types.
+- **Task Management**: Enhanced autosave task management with new capabilities to list, start specific, and restart all missing background tasks.
+- **Error Handling**: Refactored error handling to use specific, structured error types instead of generic strings, improving clarity and robustness.
+- **Code Organization**: Consolidated all autosave-related logic into the `autosave.rs` module for better code organization.
+- **Fix**: Corrected a bug in `AllOrNothing` batch set operations where duplicate keys within the same batch could lead to incorrect metadata state.
+- **Testing**: Introduced fuzz testing (`cargo-fuzz`) for critical API surfaces, including single-key operations, batch operations, and snapshot deserialization, to enhance library robustness and security.
+- **CI**: Implemented a Continuous Integration pipeline using GitHub Actions to automatically run checks, tests, and fuzz tests on every change.
+
+### v0.3.1
 - **Fix**: Fixed persistance to save the config along the manager
 
 ### v0.3.0

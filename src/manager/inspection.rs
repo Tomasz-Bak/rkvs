@@ -84,9 +84,7 @@ impl StorageManager {
     /// Ensures storage is initialized before operations.
     pub(super) async fn ensure_initialized(&self) -> Result<()> {
         if !self.is_initialized() {
-            return Err(crate::RkvsError::Storage(
-                "Storage not initialized. Call initialize() first.".to_string(),
-            ));
+            return Err(crate::RkvsError::NotInitialized);
         }
         Ok(())
     }

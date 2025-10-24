@@ -1,0 +1,53 @@
+[package]
+name = "rkvs-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+arbitrary = { version = "1.4.2", features = ["derive"] }
+libfuzzer-sys = "0.4"
+tokio = { version = "1.0", features = ["full"] }
+bincode = "1.3"
+tempfile = "3"
+
+[dependencies.rkvs]
+path = ".."
+
+[[bin]]
+name = "namespace_ops"
+path = "fuzz_targets/namespace_ops.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "batch_ops"
+path = "fuzz_targets/batch_ops.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "persistence_snapshot"
+path = "fuzz_targets/persistence_snapshot.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "namespace_management"
+path = "fuzz_targets/namespace_management.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "configuration_ops"
+path = "fuzz_targets/configuration_ops.rs"
+test = false
+doc = false
+bench = false

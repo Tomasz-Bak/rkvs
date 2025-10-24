@@ -1,7 +1,7 @@
 //! Contains all batch operations for the `Namespace`.
 use super::{BatchMode, Namespace};
 use crate::types::{BatchError, BatchResult};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::time::Instant;
 
 impl Namespace {
@@ -132,12 +132,18 @@ impl Namespace {
                 // With all shards locked, perform final validation and prepare changes.
                 let mut total_size_increase: isize = 0;
                 let mut new_keys_count: isize = 0;
+                // Use a temporary set to track keys within this batch to correctly calculate new_keys_count.
+                let mut keys_in_batch = HashSet::new();
+
                 for (shard_idx, shard_guard) in &locked_shards {
                     if let Some(shard_items) = items_by_shard.get(shard_idx) {
                         for (_, key_bytes, value) in shard_items {
-                            if let Some(existing) = shard_guard.get_value(key_bytes) {
+                            // A key is "new" only if it's not in the shard AND not already seen in this batch.
+                            if shard_guard.has_key(key_bytes) {
+                                let existing = shard_guard.get_value(key_bytes).unwrap(); // Safe to unwrap
                                 total_size_increase += value.len() as isize - existing.len() as isize;
-                            } else {
+                            } else if keys_in_batch.insert(key_bytes) {
+                                // First time seeing this key in the batch.
                                 new_keys_count += 1;
                                 total_size_increase += value.len() as isize;
                             }

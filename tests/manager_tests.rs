@@ -7,7 +7,7 @@ async fn test_uninitialized_error() -> Result<()> {
     // Any operation before initialize() should fail
     let err = storage.create_namespace("test", None).await;
     assert!(err.is_err());
-    assert!(matches!(err, Err(rkvs::RkvsError::Storage(_))));
+    assert!(matches!(err, Err(rkvs::RkvsError::NotInitialized)));
     if let Err(e) = err {
         assert!(e.to_string().contains("Storage not initialized"));
     }

@@ -85,9 +85,7 @@ impl StorageManager {
         self.ensure_initialized().await?;
 
         if self.persistence.is_none() {
-            return Err(RkvsError::Storage(
-                "Persistence is not enabled.".to_string(),
-            ));
+            return Err(RkvsError::PersistenceNotEnabled);
         }
 
         // Ensure the namespace exists before setting up a task for it.
@@ -98,6 +96,119 @@ impl StorageManager {
         let task = Self::create_namespace_autosave_task(Arc::downgrade(&self), config);
         let handle = tokio::spawn(task);
         tasks.insert(namespace_name, handle);
+
+        Ok(())
+    }
+
+    /// Starts a previously configured autosave task for a specific namespace.
+    ///
+    /// This will only succeed if an autosave configuration for the namespace exists
+    /// and the task is not already running.
+    pub async fn start_namespace_autosave_task(
+        self: Arc<Self>,
+        namespace_name: &str,
+    ) -> Result<()> {
+        self.ensure_initialized().await?;
+
+        if self.persistence.is_none() {
+            return Err(RkvsError::PersistenceNotEnabled);
+        }
+
+        let mut tasks = self.autosave_tasks.write().await;
+        if tasks.contains_key(namespace_name) {
+            return Err(RkvsError::AutosaveTaskAlreadyExists(namespace_name.to_string()));
+        }
+
+        let config_guard = self.config.read().await;
+        if let Some(config) = config_guard
+            .namespace_autosave
+            .iter()
+            .find(|c| c.namespace_name == *namespace_name)
+        {
+            let task = Self::create_namespace_autosave_task(Arc::downgrade(&self), config.clone());
+            let handle = tokio::spawn(task);
+            tasks.insert(namespace_name.to_string(), handle);
+            Ok(())
+        } else {
+            Err(RkvsError::AutosaveConfigNotFound(namespace_name.to_string()))
+        }
+    }
+
+    /// Scans the configuration and starts any autosave tasks that are not currently running.
+    ///
+    /// This is useful for restarting tasks that were stopped or failed to start.
+    pub async fn start_missing_autosave_tasks(self: Arc<Self>) -> Result<()> {
+        self.ensure_initialized().await?;
+
+        if self.persistence.is_none() {
+            return Ok(()); // Nothing to do if persistence is off
+        }
+
+        let config_guard = self.config.read().await;
+
+        // Check and start manager-level autosave if needed
+        if let Some(manager_config) = &config_guard.manager_autosave {
+            let mut task_guard = self.manager_autosave_task.write().await;
+            if task_guard.is_none() {
+                let manager_task = Self::create_manager_autosave_task(Arc::downgrade(&self), manager_config.clone());
+                *task_guard = Some(tokio::spawn(manager_task));
+            }
+        }
+
+        // Check and start namespace-level autosaves if needed
+        let mut tasks = self.autosave_tasks.write().await;
+        for ns_config in &config_guard.namespace_autosave {
+            if !tasks.contains_key(&ns_config.namespace_name) {
+                let task = Self::create_namespace_autosave_task(Arc::downgrade(&self), ns_config.clone());
+                let handle = tokio::spawn(task);
+                tasks.insert(ns_config.namespace_name.clone(), handle);
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Lists the names of all currently running autosave tasks.
+    ///
+    /// Returns a tuple where the first element is a boolean indicating if the
+    /// manager-level autosave task is active, and the second element is a vector
+    /// of namespace names with active autosave tasks.
+    pub async fn list_running_autosave_tasks(&self) -> Result<(bool, Vec<String>)> {
+        self.ensure_initialized().await?;
+
+        let manager_task_running = self.manager_autosave_task.read().await.is_some();
+
+        let tasks = self.autosave_tasks.read().await;
+        let namespace_tasks = tasks.keys().cloned().collect();
+
+        Ok((manager_task_running, namespace_tasks))
+    }
+
+    /// Stops a running autosave task for a specific namespace.
+    ///
+    /// If a task is found for the given namespace name, it will be aborted and removed.
+    pub async fn stop_namespace_autosave(&self, namespace_name: &str) -> Result<()> {
+        self.ensure_initialized().await?;
+        let mut tasks = self.autosave_tasks.write().await;
+
+        if let Some(handle) = tasks.remove(namespace_name) {
+            handle.abort();
+            Ok(())
+        } else {
+            Err(RkvsError::AutosaveTaskNotFound(namespace_name.to_string()))
+        }
+    }
+
+    /// Stops the running autosave task for the entire storage manager.
+    ///
+    /// If the manager-level autosave task is running, it will be aborted.
+    pub async fn stop_manager_autosave(&self) -> Result<()> {
+        self.ensure_initialized().await?;
+        let mut task_guard = self.manager_autosave_task.write().await;
+
+        if let Some(handle) = task_guard.take() {
+            handle.abort();
+        }
 
         Ok(())
     }

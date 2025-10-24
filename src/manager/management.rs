@@ -16,19 +16,13 @@ impl StorageManager {
         let mut namespaces = self.namespaces.write().await;
 
         if namespaces.contains_key(name) {
-            return Err(RkvsError::Storage(format!(
-                "Namespace '{}' already exists",
-                name
-            )));
+            return Err(RkvsError::NamespaceAlreadyExists(name.to_string()));
         }
 
         let config_guard = self.config.read().await;
         if let Some(max_namespaces) = config_guard.max_namespaces {
             if namespaces.len() >= max_namespaces {
-                return Err(RkvsError::Storage(format!(
-                    "Maximum number of namespaces ({}) reached",
-                    max_namespaces
-                )));
+                return Err(RkvsError::MaxNamespacesReached(max_namespaces));
             }
         }
 
@@ -61,10 +55,7 @@ impl StorageManager {
 
         match namespaces.get(name) {
             Some(namespace) => namespace.update_config(new_config).await,
-            _ => Err(RkvsError::Storage(format!(
-                "Namespace with name '{}' does not exist",
-                name
-            ))),
+            _ => Err(RkvsError::NamespaceNotFound(name.to_string())),
         }
     }
 
@@ -78,10 +69,7 @@ impl StorageManager {
         if let Some(namespace) = namespaces.get(name) {
             Ok(namespace.clone())
         } else {
-            Err(RkvsError::Storage(format!(
-                "Namespace with name {} does not exist",
-                name
-            )))
+            Err(RkvsError::NamespaceNotFound(name.to_string()))
         }
     }
 
@@ -101,10 +89,7 @@ impl StorageManager {
         if namespaces.remove(name).is_some() {
             Ok(())
         } else {
-            Err(RkvsError::Storage(format!(
-                "Namespace with name {} does not exist",
-                name
-            )))
+            Err(RkvsError::NamespaceNotFound(name.to_string()))
         }
     }
 
@@ -121,33 +106,5 @@ impl StorageManager {
         }
 
         Ok(names)
-    }
-
-    /// Stops a running autosave task for a specific namespace.
-    pub async fn stop_namespace_autosave(&self, namespace_name: &str) -> Result<()> {
-        self.ensure_initialized().await?;
-        let mut tasks = self.autosave_tasks.write().await;
-
-        if let Some(handle) = tasks.remove(namespace_name) {
-            handle.abort();
-            Ok(())
-        } else {
-            Err(RkvsError::Storage(format!(
-                "No active autosave task found for namespace '{}'",
-                namespace_name
-            )))
-        }
-    }
-
-    /// Stops the running autosave task for the entire storage manager.
-    pub async fn stop_manager_autosave(&self) -> Result<()> {
-        self.ensure_initialized().await?;
-        let mut task_guard = self.manager_autosave_task.write().await;
-
-        if let Some(handle) = task_guard.take() {
-            handle.abort();
-        }
-
-        Ok(())
     }
 }
