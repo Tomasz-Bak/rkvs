@@ -39,7 +39,9 @@ jobs:
       run: cargo fmt --all -- --check
 
     - name: Run Clippy
-      run: cargo clippy
+      run: cargo clippy --all-targets --all-features
+      env:
+        RUSTFLAGS: ""
 
     - name: Run tests
       run: cargo test
