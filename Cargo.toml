@@ -7,8 +7,8 @@ authors = ["RKVS Contributors"]
 license = "MIT"
 repository = "https://github.com/Tomasz-Bak/rkvs"
 readme = "README.md"
-keywords = ["key-value", "storage", "database", "async", "kv-store"]
-categories = ["database", "data-structures", "asynchronous"]
+keywords = ["key-value", "in-memory", "async", "tokio", "sharding"]
+categories = ["database-implementations", "data-structures", "asynchronous", "caching", "concurrency"]
 
 [lib]
 name = "rkvs"
