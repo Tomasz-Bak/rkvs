@@ -1,7 +1,7 @@
 [![Crates.io](https://img.shields.io/crates/v/rkvs.svg)](https://crates.io/crates/rkvs)
 [![Documentation](https://docs.rs/rkvs/badge.svg)](https://docs.rs/rkvs)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/Tomasz-Bak/rkvs/ci.yml?branch=main)](https://github.com/Tomasz-Bak/rkvs/actions?query=workflow%3A%22Rust+CI%22+branch%3Amaster)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/Tomasz-Bak/rkvs/ci.yml?branch=master)](https://github.com/Tomasz-Bak/rkvs/actions/workflows/ci.yml)
 # RKVS - Rust Key-Value Storage
 
 RKVS is a high-performance, in-memory, asynchronous key-value storage library for Rust. It is designed for concurrent applications and provides a thread-safe API built on Tokio.
