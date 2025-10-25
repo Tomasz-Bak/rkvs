@@ -1,130 +1,130 @@
 [
   {
     "scenario_name": "Sequential Get on 100k-key Namespace (1 Shard(s))",
-    "min_latency_ns": 187,
-    "avg_latency_ns": 294,
-    "p99_latency_ns": 644,
-    "max_latency_ns": 14620,
+    "min_latency_ns": 191,
+    "avg_latency_ns": 297,
+    "p99_latency_ns": 645,
+    "max_latency_ns": 66195,
     "avg_deviation_percent": 0.0
   },
   {
     "scenario_name": "Sequential Set (Update) on 100k-key Namespace (1 Shard(s))",
-    "min_latency_ns": 227,
-    "avg_latency_ns": 312,
-    "p99_latency_ns": 657,
-    "max_latency_ns": 72518,
+    "min_latency_ns": 232,
+    "avg_latency_ns": 324,
+    "p99_latency_ns": 668,
+    "max_latency_ns": 21312,
     "avg_deviation_percent": 0.0
   },
   {
     "scenario_name": "Sequential Get on 100k-key Namespace (2 Shard(s))",
-    "min_latency_ns": 187,
-    "avg_latency_ns": 329,
-    "p99_latency_ns": 672,
-    "max_latency_ns": 103205,
-    "avg_deviation_percent": 0.14200000000000002
+    "min_latency_ns": 192,
+    "avg_latency_ns": 333,
+    "p99_latency_ns": 675,
+    "max_latency_ns": 23011,
+    "avg_deviation_percent": 0.132
   },
   {
     "scenario_name": "Sequential Set (Update) on 100k-key Namespace (2 Shard(s))",
-    "min_latency_ns": 232,
-    "avg_latency_ns": 394,
-    "p99_latency_ns": 706,
-    "max_latency_ns": 112938,
-    "avg_deviation_percent": 0.14200000000000002
+    "min_latency_ns": 237,
+    "avg_latency_ns": 401,
+    "p99_latency_ns": 712,
+    "max_latency_ns": 82538,
+    "avg_deviation_percent": 0.132
   },
   {
     "scenario_name": "Sequential Get on 100k-key Namespace (4 Shard(s))",
-    "min_latency_ns": 188,
-    "avg_latency_ns": 325,
-    "p99_latency_ns": 658,
-    "max_latency_ns": 73511,
-    "avg_deviation_percent": 0.666
+    "min_latency_ns": 193,
+    "avg_latency_ns": 328,
+    "p99_latency_ns": 669,
+    "max_latency_ns": 40016,
+    "avg_deviation_percent": 0.356
   },
   {
     "scenario_name": "Sequential Set (Update) on 100k-key Namespace (4 Shard(s))",
-    "min_latency_ns": 238,
-    "avg_latency_ns": 397,
-    "p99_latency_ns": 719,
-    "max_latency_ns": 603566,
-    "avg_deviation_percent": 0.666
+    "min_latency_ns": 247,
+    "avg_latency_ns": 406,
+    "p99_latency_ns": 721,
+    "max_latency_ns": 99113,
+    "avg_deviation_percent": 0.356
   },
   {
     "scenario_name": "Sequential Get on 100k-key Namespace (8 Shard(s))",
-    "min_latency_ns": 191,
-    "avg_latency_ns": 334,
+    "min_latency_ns": 197,
+    "avg_latency_ns": 336,
     "p99_latency_ns": 661,
-    "max_latency_ns": 39913,
-    "avg_deviation_percent": 0.782
+    "max_latency_ns": 16301,
+    "avg_deviation_percent": 0.516
   },
   {
     "scenario_name": "Sequential Set (Update) on 100k-key Namespace (8 Shard(s))",
-    "min_latency_ns": 243,
-    "avg_latency_ns": 398,
-    "p99_latency_ns": 718,
-    "max_latency_ns": 162150,
-    "avg_deviation_percent": 0.782
+    "min_latency_ns": 254,
+    "avg_latency_ns": 411,
+    "p99_latency_ns": 729,
+    "max_latency_ns": 71531,
+    "avg_deviation_percent": 0.516
   },
   {
     "scenario_name": "Sequential Get on 100k-key Namespace (16 Shard(s))",
-    "min_latency_ns": 202,
-    "avg_latency_ns": 351,
-    "p99_latency_ns": 675,
-    "max_latency_ns": 82266,
-    "avg_deviation_percent": 0.818
+    "min_latency_ns": 212,
+    "avg_latency_ns": 352,
+    "p99_latency_ns": 680,
+    "max_latency_ns": 15699,
+    "avg_deviation_percent": 1.106
   },
   {
     "scenario_name": "Sequential Set (Update) on 100k-key Namespace (16 Shard(s))",
-    "min_latency_ns": 248,
-    "avg_latency_ns": 430,
-    "p99_latency_ns": 759,
-    "max_latency_ns": 20734,
-    "avg_deviation_percent": 0.818
+    "min_latency_ns": 252,
+    "avg_latency_ns": 432,
+    "p99_latency_ns": 762,
+    "max_latency_ns": 34216,
+    "avg_deviation_percent": 1.106
   },
   {
     "scenario_name": "Sequential Get on 100k-key Namespace (32 Shard(s))",
-    "min_latency_ns": 212,
-    "avg_latency_ns": 375,
-    "p99_latency_ns": 703,
-    "max_latency_ns": 28448,
-    "avg_deviation_percent": 1.274
+    "min_latency_ns": 209,
+    "avg_latency_ns": 374,
+    "p99_latency_ns": 700,
+    "max_latency_ns": 21830,
+    "avg_deviation_percent": 1.468
   },
   {
     "scenario_name": "Sequential Set (Update) on 100k-key Namespace (32 Shard(s))",
-    "min_latency_ns": 260,
-    "avg_latency_ns": 449,
-    "p99_latency_ns": 766,
-    "max_latency_ns": 22107,
-    "avg_deviation_percent": 1.274
+    "min_latency_ns": 263,
+    "avg_latency_ns": 458,
+    "p99_latency_ns": 780,
+    "max_latency_ns": 71187,
+    "avg_deviation_percent": 1.468
   },
   {
     "scenario_name": "Sequential Get on 100k-key Namespace (64 Shard(s))",
-    "min_latency_ns": 213,
-    "avg_latency_ns": 394,
-    "p99_latency_ns": 719,
-    "max_latency_ns": 34014,
-    "avg_deviation_percent": 1.7399999999999998
+    "min_latency_ns": 222,
+    "avg_latency_ns": 391,
+    "p99_latency_ns": 713,
+    "max_latency_ns": 60464,
+    "avg_deviation_percent": 1.9529999999999998
   },
   {
     "scenario_name": "Sequential Set (Update) on 100k-key Namespace (64 Shard(s))",
-    "min_latency_ns": 250,
-    "avg_latency_ns": 471,
-    "p99_latency_ns": 794,
-    "max_latency_ns": 107610,
-    "avg_deviation_percent": 1.7399999999999998
+    "min_latency_ns": 262,
+    "avg_latency_ns": 473,
+    "p99_latency_ns": 780,
+    "max_latency_ns": 21960,
+    "avg_deviation_percent": 1.9529999999999998
   },
   {
     "scenario_name": "Sequential Get on 100k-key Namespace (128 Shard(s))",
-    "min_latency_ns": 232,
-    "avg_latency_ns": 418,
-    "p99_latency_ns": 742,
-    "max_latency_ns": 21865,
-    "avg_deviation_percent": 3.1329999999999996
+    "min_latency_ns": 234,
+    "avg_latency_ns": 416,
+    "p99_latency_ns": 729,
+    "max_latency_ns": 425582,
+    "avg_deviation_percent": 2.7754999999999996
   },
   {
     "scenario_name": "Sequential Set (Update) on 100k-key Namespace (128 Shard(s))",
-    "min_latency_ns": 261,
-    "avg_latency_ns": 486,
-    "p99_latency_ns": 810,
-    "max_latency_ns": 21830,
-    "avg_deviation_percent": 3.1329999999999996
+    "min_latency_ns": 281,
+    "avg_latency_ns": 491,
+    "p99_latency_ns": 790,
+    "max_latency_ns": 22071,
+    "avg_deviation_percent": 2.7754999999999996
   }
 ]

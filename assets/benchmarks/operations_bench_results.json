@@ -1,198 +1,198 @@
 [
   {
     "scenario_name": "Sequential Set (Insert) on 1k-key Namespace",
-    "min_latency_ns": 230,
-    "avg_latency_ns": 247,
-    "p99_latency_ns": 302,
-    "max_latency_ns": 57943
+    "min_latency_ns": 225,
+    "avg_latency_ns": 242,
+    "p99_latency_ns": 275,
+    "max_latency_ns": 57281
   },
   {
     "scenario_name": "Sequential Set (Update) on 1k-key Namespace",
     "min_latency_ns": 226,
-    "avg_latency_ns": 252,
-    "p99_latency_ns": 309,
-    "max_latency_ns": 31120
+    "avg_latency_ns": 250,
+    "p99_latency_ns": 295,
+    "max_latency_ns": 16263
   },
   {
     "scenario_name": "Sequential Update on 1k-key Namespace",
-    "min_latency_ns": 255,
-    "avg_latency_ns": 279,
-    "p99_latency_ns": 337,
-    "max_latency_ns": 35984
+    "min_latency_ns": 254,
+    "avg_latency_ns": 281,
+    "p99_latency_ns": 381,
+    "max_latency_ns": 19800
   },
   {
     "scenario_name": "Sequential Get on 1k-key Namespace",
-    "min_latency_ns": 198,
-    "avg_latency_ns": 216,
-    "p99_latency_ns": 262,
-    "max_latency_ns": 18677
+    "min_latency_ns": 209,
+    "avg_latency_ns": 225,
+    "p99_latency_ns": 254,
+    "max_latency_ns": 58348
   },
   {
     "scenario_name": "Sequential Exists on 1k-key Namespace",
-    "min_latency_ns": 189,
-    "avg_latency_ns": 208,
-    "p99_latency_ns": 253,
-    "max_latency_ns": 315208
+    "min_latency_ns": 200,
+    "avg_latency_ns": 217,
+    "p99_latency_ns": 245,
+    "max_latency_ns": 25555
   },
   {
     "scenario_name": "Sequential Delete on 1k-key Namespace",
-    "min_latency_ns": 224,
+    "min_latency_ns": 222,
     "avg_latency_ns": 247,
-    "p99_latency_ns": 321,
-    "max_latency_ns": 157308
+    "p99_latency_ns": 339,
+    "max_latency_ns": 13264
   },
   {
     "scenario_name": "Sequential Consume on 1k-key Namespace",
-    "min_latency_ns": 209,
-    "avg_latency_ns": 229,
-    "p99_latency_ns": 287,
-    "max_latency_ns": 21600
+    "min_latency_ns": 211,
+    "avg_latency_ns": 231,
+    "p99_latency_ns": 253,
+    "max_latency_ns": 18562
   },
   {
     "scenario_name": "Sequential Set (Insert) on 10k-key Namespace",
-    "min_latency_ns": 226,
-    "avg_latency_ns": 248,
-    "p99_latency_ns": 308,
-    "max_latency_ns": 420521
+    "min_latency_ns": 227,
+    "avg_latency_ns": 247,
+    "p99_latency_ns": 288,
+    "max_latency_ns": 411852
   },
   {
     "scenario_name": "Sequential Set (Update) on 10k-key Namespace",
     "min_latency_ns": 228,
-    "avg_latency_ns": 266,
-    "p99_latency_ns": 323,
-    "max_latency_ns": 12460
+    "avg_latency_ns": 262,
+    "p99_latency_ns": 304,
+    "max_latency_ns": 438256
   },
   {
     "scenario_name": "Sequential Update on 10k-key Namespace",
-    "min_latency_ns": 256,
-    "avg_latency_ns": 297,
-    "p99_latency_ns": 353,
-    "max_latency_ns": 69040
+    "min_latency_ns": 255,
+    "avg_latency_ns": 290,
+    "p99_latency_ns": 330,
+    "max_latency_ns": 14174
   },
   {
     "scenario_name": "Sequential Get on 10k-key Namespace",
-    "min_latency_ns": 197,
-    "avg_latency_ns": 225,
-    "p99_latency_ns": 277,
-    "max_latency_ns": 12615
+    "min_latency_ns": 208,
+    "avg_latency_ns": 236,
+    "p99_latency_ns": 270,
+    "max_latency_ns": 204581
   },
   {
     "scenario_name": "Sequential Exists on 10k-key Namespace",
-    "min_latency_ns": 189,
-    "avg_latency_ns": 213,
-    "p99_latency_ns": 258,
-    "max_latency_ns": 14207
+    "min_latency_ns": 200,
+    "avg_latency_ns": 222,
+    "p99_latency_ns": 250,
+    "max_latency_ns": 12930
   },
   {
     "scenario_name": "Sequential Delete on 10k-key Namespace",
-    "min_latency_ns": 218,
-    "avg_latency_ns": 257,
-    "p99_latency_ns": 316,
-    "max_latency_ns": 63858
+    "min_latency_ns": 219,
+    "avg_latency_ns": 258,
+    "p99_latency_ns": 284,
+    "max_latency_ns": 58692
   },
   {
     "scenario_name": "Sequential Consume on 10k-key Namespace",
-    "min_latency_ns": 206,
-    "avg_latency_ns": 241,
-    "p99_latency_ns": 301,
-    "max_latency_ns": 181805
+    "min_latency_ns": 211,
+    "avg_latency_ns": 242,
+    "p99_latency_ns": 267,
+    "max_latency_ns": 11548
   },
   {
     "scenario_name": "Sequential Set (Insert) on 100k-key Namespace",
-    "min_latency_ns": 230,
-    "avg_latency_ns": 263,
-    "p99_latency_ns": 411,
-    "max_latency_ns": 3765767
+    "min_latency_ns": 236,
+    "avg_latency_ns": 268,
+    "p99_latency_ns": 413,
+    "max_latency_ns": 3575501
   },
   {
     "scenario_name": "Sequential Set (Update) on 100k-key Namespace",
-    "min_latency_ns": 233,
-    "avg_latency_ns": 317,
-    "p99_latency_ns": 660,
-    "max_latency_ns": 27856
+    "min_latency_ns": 232,
+    "avg_latency_ns": 314,
+    "p99_latency_ns": 619,
+    "max_latency_ns": 15577
   },
   {
     "scenario_name": "Sequential Update on 100k-key Namespace",
-    "min_latency_ns": 265,
-    "avg_latency_ns": 357,
-    "p99_latency_ns": 672,
-    "max_latency_ns": 21965
+    "min_latency_ns": 260,
+    "avg_latency_ns": 347,
+    "p99_latency_ns": 637,
+    "max_latency_ns": 68550
   },
   {
     "scenario_name": "Sequential Get on 100k-key Namespace",
-    "min_latency_ns": 203,
-    "avg_latency_ns": 273,
-    "p99_latency_ns": 513,
-    "max_latency_ns": 14429
+    "min_latency_ns": 214,
+    "avg_latency_ns": 283,
+    "p99_latency_ns": 516,
+    "max_latency_ns": 60653
   },
   {
     "scenario_name": "Sequential Exists on 100k-key Namespace",
-    "min_latency_ns": 190,
-    "avg_latency_ns": 245,
-    "p99_latency_ns": 395,
-    "max_latency_ns": 16033
+    "min_latency_ns": 200,
+    "avg_latency_ns": 252,
+    "p99_latency_ns": 368,
+    "max_latency_ns": 18756
   },
   {
     "scenario_name": "Sequential Delete on 100k-key Namespace",
-    "min_latency_ns": 217,
-    "avg_latency_ns": 313,
-    "p99_latency_ns": 683,
-    "max_latency_ns": 69529
+    "min_latency_ns": 227,
+    "avg_latency_ns": 304,
+    "p99_latency_ns": 649,
+    "max_latency_ns": 18067
   },
   {
     "scenario_name": "Sequential Consume on 100k-key Namespace",
-    "min_latency_ns": 214,
-    "avg_latency_ns": 291,
-    "p99_latency_ns": 571,
-    "max_latency_ns": 64701
+    "min_latency_ns": 221,
+    "avg_latency_ns": 289,
+    "p99_latency_ns": 506,
+    "max_latency_ns": 49691
   },
   {
     "scenario_name": "Sequential Set (Insert) on 1M-key Namespace",
-    "min_latency_ns": 232,
-    "avg_latency_ns": 286,
-    "p99_latency_ns": 536,
-    "max_latency_ns": 64718
+    "min_latency_ns": 228,
+    "avg_latency_ns": 282,
+    "p99_latency_ns": 535,
+    "max_latency_ns": 19492
   },
   {
     "scenario_name": "Sequential Set (Update) on 1M-key Namespace",
-    "min_latency_ns": 232,
-    "avg_latency_ns": 467,
-    "p99_latency_ns": 1300,
-    "max_latency_ns": 204099
+    "min_latency_ns": 240,
+    "avg_latency_ns": 466,
+    "p99_latency_ns": 1272,
+    "max_latency_ns": 59899
   },
   {
     "scenario_name": "Sequential Update on 1M-key Namespace",
-    "min_latency_ns": 269,
-    "avg_latency_ns": 501,
-    "p99_latency_ns": 851,
-    "max_latency_ns": 65776
+    "min_latency_ns": 267,
+    "avg_latency_ns": 486,
+    "p99_latency_ns": 881,
+    "max_latency_ns": 110208
   },
   {
     "scenario_name": "Sequential Get on 1M-key Namespace",
-    "min_latency_ns": 201,
+    "min_latency_ns": 210,
     "avg_latency_ns": 409,
-    "p99_latency_ns": 778,
-    "max_latency_ns": 189287
+    "p99_latency_ns": 771,
+    "max_latency_ns": 16427
   },
   {
     "scenario_name": "Sequential Exists on 1M-key Namespace",
-    "min_latency_ns": 195,
-    "avg_latency_ns": 385,
-    "p99_latency_ns": 720,
-    "max_latency_ns": 23225
+    "min_latency_ns": 202,
+    "avg_latency_ns": 388,
+    "p99_latency_ns": 724,
+    "max_latency_ns": 158004
   },
   {
     "scenario_name": "Sequential Delete on 1M-key Namespace",
-    "min_latency_ns": 218,
-    "avg_latency_ns": 443,
-    "p99_latency_ns": 739,
-    "max_latency_ns": 146977
+    "min_latency_ns": 224,
+    "avg_latency_ns": 439,
+    "p99_latency_ns": 744,
+    "max_latency_ns": 47508
   },
   {
     "scenario_name": "Sequential Consume on 1M-key Namespace",
-    "min_latency_ns": 211,
-    "avg_latency_ns": 430,
-    "p99_latency_ns": 752,
-    "max_latency_ns": 20338
+    "min_latency_ns": 215,
+    "avg_latency_ns": 426,
+    "p99_latency_ns": 747,
+    "max_latency_ns": 49980
   }
 ]
