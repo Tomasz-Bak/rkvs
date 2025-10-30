@@ -47,7 +47,7 @@ jobs:
       run: cargo test
 
     - name: Install cargo-fuzz
-      run: cargo install cargo-fuzz
+      run: cargo install cargo-fuzz --force
 
     - name: Fuzz namespace_ops (60s)
       run: cargo fuzz run namespace_ops -- -max_total_time=60
